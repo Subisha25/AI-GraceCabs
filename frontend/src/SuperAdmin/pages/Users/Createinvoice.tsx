@@ -314,17 +314,20 @@ const selectedManager = managers.find((m) => m.userId === managerUserId);
   const fetchVehicleSchedule = async () => {
     setLoadingSchedule(true);
     try {
-      const res = await axiosInstance.get<{ data: any[] }>(
-        "/vehicleType/getAllVehicleType"
-      );
-
-      if (Array.isArray(res.data.data)) {
-        const mapped = res.data.data.map((item) => ({
-          vehicleTypeId: item.vehicleTypeId,
-          vehicleType: item.vehicleType,
-          priorMinutes: item.priorMinutes ?? 0,
-        }));
-
+      const res = await axiosInstance.get<{ data: any[] }>("/vehicles");
+      if (res.data && Array.isArray(res.data.data)) {
+        const seen = new Set();
+        const mapped: VehicleSchedule[] = [];
+        res.data.data.forEach((item) => {
+          if (!seen.has(item.vehicle_type)) {
+            seen.add(item.vehicle_type);
+            mapped.push({
+              vehicleTypeId: item.id,
+              vehicleType: item.vehicle_type,
+              priorMinutes: 0,
+            });
+          }
+        });
         setVehicleSchedules(mapped);
       } else {
         setVehicleSchedules([]);
@@ -549,30 +552,19 @@ useEffect(() => {
   const fetchVehiclesByCarType = async (vehicleTypeId: string) => {
     setLoadingVehicles(true);
     try {
-      const res = await axiosInstance.get<VehiclesResponse>(
-        `/vehicle/${vehicleTypeId}/getVehiclesByVehicleTypeForWeb`
-      );
-
-      if (res.data && Array.isArray(res.data.vehicles)) {
-        const normalizedVehicles = res.data.vehicles.map((v) => {
-          let images: string[] = [];
-
-          if (Array.isArray(v.vehicleImg)) {
-            images = v.vehicleImg;
-          } else if (typeof v.vehicleImg === "string") {
-            try {
-              const parsed = JSON.parse(v.vehicleImg);
-              images = Array.isArray(parsed) ? parsed : [v.vehicleImg];
-            } catch {
-              images = [v.vehicleImg];
-            }
-          }
-
-          return { ...v, vehicleImg: images };
-        });
-
+      const res = await axiosInstance.get<{ data: any[] }>("/vehicles");
+      if (res.data && Array.isArray(res.data.data)) {
+        const filtered = res.data.data.filter((v: any) => v.vehicle_type === formData.carType);
+        const normalizedVehicles = filtered.map((v: any) => ({
+          vehicleId: v.id,
+          vehicleName: `${v.vehicle_type} (${v.vehicle_number})`,
+          localPerHour: 0,
+          localPerKm: parseFloat(v.price_per_km || 0),
+          OutstationPerKm: parseFloat(v.price_per_km || 0),
+          OSDriverBata: 0,
+          vehicleImg: v.image ? [v.image] : []
+        }));
         setVehicles(normalizedVehicles);
-        
         if (formData.pickupPoint && companyId) {
           await fetchPackageDetails(vehicleTypeId, formData.pickupPoint, effectiveCompanyId);
         }
@@ -654,11 +646,20 @@ useEffect(() => {
     const fetchCarTypes = async () => {
       setLoadingCars(true);
       try {
-        const res = await axiosInstance.get<{ data: VehicleType[] }>(
-          "/vehicleType/getAllVehicleType"
-        );
-        if (Array.isArray(res.data.data)) {
-          setCarTypes(res.data.data);
+        const res = await axiosInstance.get<{ data: any[] }>("/vehicles");
+        if (res.data && Array.isArray(res.data.data)) {
+          const seen = new Set();
+          const mapped: VehicleType[] = [];
+          res.data.data.forEach((item) => {
+            if (!seen.has(item.vehicle_type)) {
+              seen.add(item.vehicle_type);
+              mapped.push({
+                vehicleTypeId: item.id,
+                vehicleType: item.vehicle_type
+              });
+            }
+          });
+          setCarTypes(mapped);
         } else {
           setCarTypes([]);
         }
@@ -808,7 +809,7 @@ const validBehalfPhone =
 // };
 const isValidManagerEmail = (email: string) => {
   //const regex = /^[a-zA-Z0-9._%+-]+@danfoss\.com$/i;
-    const regex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|gracecabs\.com|danfoss\.com)$/i;
+    const regex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|local\.platform|danfoss\.com)$/i;
   return regex.test(email.trim());
 };
   const handleBooking = async () => {

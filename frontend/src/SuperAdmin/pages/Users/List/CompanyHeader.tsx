@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../../utils/axiosInstance";
 import { showToast } from "../../../../components/AlertBox";
 import { LogOut } from "lucide-react";
+import config from "../../../../config/config";
 
 type Company = {
   companyId: string;
@@ -83,7 +84,7 @@ export default function CompanyHeader() {
   const logoUrl = company.companyLogo
     ? company.companyLogo.startsWith("http")
       ? company.companyLogo
-      : `https://gracecabs.com/uploads/companyLogo/${company.companyLogo}`
+      : `${config.baseurl.apibaseurl}/uploads/companyLogo/${company.companyLogo}`
     : "";
 
   return (

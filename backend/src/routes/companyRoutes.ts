@@ -1,5 +1,5 @@
 import express from 'express';
-import {getAllCompany,getCompanyById,updateCompany,deleteCompany, restoreCompany, getCompanyBySeoUrl,getCompanyTaxes} from '../services/companyServices';
+import {getAllCompany,getCompanyById,updateCompany,deleteCompany, restoreCompany, getCompanyBySeoUrl,getCompanyTaxes, assignPackage, getPackageAssignment} from '../services/companyServices';
 import { authMiddleware,} from '../middleware/authMiddleware';
 import { uploadCompanyLogo } from "../middleware/uploadConfig"; 
 
@@ -18,5 +18,8 @@ router.put(
 );
 router.delete("/companyDelete/:id",authMiddleware,deleteCompany);
 router.put("/companyRestore/:id", authMiddleware, restoreCompany);
+
+router.post("/assignPackage", authMiddleware, assignPackage);
+router.get("/packageAssignment/:companyId", authMiddleware, getPackageAssignment);
 
 export default router;

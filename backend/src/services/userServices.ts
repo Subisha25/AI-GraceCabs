@@ -1191,3 +1191,28 @@ export const getManagerDetailsByUserId = async (req: Request, res: Response) => 
     });
   }
 };
+
+export const getCustomers = async (req: Request, res: Response) => {
+  try {
+    const operatorId = (req as any).operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a';
+    const customers = await User.findAll({
+      where: {
+        companyId: null,
+        operatorId
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Customers retrieved successfully",
+      users: customers
+    });
+  } catch (error: any) {
+    console.error("getCustomers error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error"
+    });
+  }
+};

@@ -1,11 +1,19 @@
 import React, { JSX } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
 
-  return isAuthenticated ? children : <Navigate to="/adminlogin" replace />;
+  if (!isAuthenticated) {
+    if (location.pathname.startsWith('/customer')) {
+      return <Navigate to="/login" replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

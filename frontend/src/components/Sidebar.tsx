@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faTachometerAlt, faCogs, faMoneyCheckAlt, faCar, faClipboardList,
-  faUsers, faUserTie, faUserSecret, faFileInvoice, faChartBar, faDatabase,
-  faChevronDown, faChevronRight, faPlus, faList, faEnvelope, faCity,
-  faBuilding, faBoxOpen, faMapMarkerAlt, faReceipt, faBell, faCheckCircle,
-  faTimesCircle, faUser, faUserPlus, faUserFriends, faTruck, faCarSide,
-  faCarAlt, faMoneyBillWave, faCashRegister, faClipboardCheck, faFileAlt,
-  faCrown, faUserPen,
-  faCalendarAlt,
-  faCalendarCheck,
-  faFileLines
+  faTachometerAlt, faCar, faClipboardList,
+  faUsers, faUserTie, faFileInvoice, faChartBar,
+  faChevronDown, faChevronRight, faPlus, faList,
+  faBuilding, faBoxOpen, faUser, faTruck, faCarSide,
+  faCarAlt, faMoneyBillWave, faCheckCircle,
+  faCalendarAlt, faFileLines, faCog, faHandshake,
+  faIdCard, faRoute, faUserShield, faLayerGroup,
+  faCreditCard, faSignOutAlt, faCalculator
 } from '@fortawesome/free-solid-svg-icons';
-import { NavLink } from 'react-router-dom'; // ✅ Changed from Link to NavLink
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-// Interface for menu items
 interface MenuItem {
   label: string;
   path?: string;
@@ -22,318 +20,296 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
-// Menu items
-const menu: MenuItem[] = [
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SUPERADMIN / OPERATOR ADMIN MENU
+// Commercial Fleet & Transport Management Platform
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const superadminMenu: MenuItem[] = [
   {
     label: 'Dashboard',
     icon: faTachometerAlt,
     path: '/dashboard',
   },
+
+  // ── BOOKINGS ──────────────────────────────────
   {
-    label: 'Master',
-    icon: faCrown,
-    children: [
-      {
-        label: 'Tax',
-        icon: faList,
-        children: [
-          { label: 'Add Tax', path: '/master/tax/add', icon: faPlus },
-          { label: 'List Tax', path: '/master/tax/list', icon: faList },
-        ],
-      },
-      {
-        label: 'Pickup Area',
-        icon: faMapMarkerAlt,
-        children: [
-          { label: 'Add Pickup Area', path: '/master/pickuparea/add', icon: faPlus },
-          { label: 'Pickup Area Info', path: '/master/pickuparea/info', icon: faList },
-        ],
-      },
-      {
-        label: 'Pickup City',
-        icon: faCity,
-        children: [
-          { label: 'Add Pickup City', path: '/master/pickupcity/add', icon: faPlus },
-          { label: 'List Pickup City', path: '/master/pickupcity/list', icon: faList },
-        ],
-      },
-      {
-        label: 'Company',
-        icon: faBuilding,
-        children: [
-          { label: 'Add Company', path: '/master/company/add', icon: faPlus },
-          { label: 'List Company', path: '/master/company/list', icon: faList },
-        ],
-      },
-      {
-        label: 'Package',
-        icon: faBoxOpen,
-        children: [
-          { label: 'Add Package', path: '/master/package/add', icon: faPlus },
-          { label: 'List Package', path: '/master/package/list', icon: faList },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'Configuration',
-    icon: faCogs,
-    children: [
-      { label: 'Configuration', path: '/configuration/master', icon: faCogs },
-      { label: 'Email Configuration', path: '/configuration/email', icon: faEnvelope }
-    ],
-  },
-  {
-    label: 'Payment Mode',
-    icon: faMoneyCheckAlt,
-    children: [
-      { label: 'Add Payment Mode', path: '/paymentmode/add', icon: faPlus },
-      { label: 'List Payment Mode', path: '/paymentmode/list', icon: faList },
-    ],
-  },
-  {
-    label: 'Vehicle',
-    icon: faCar,
-    children: [
-      {
-        label: 'Vehicle Type',
-        icon: faList,
-        children: [
-          { label: 'Add Vehicle Type', path: '/vehicle/vehicletype/add', icon: faPlus },
-          { label: 'List Vehicle Type', path: '/vehicle/vehicletype/list', icon: faCarSide },
-        ],
-      },
-      {
-        label: 'Vehicle Model',
-        icon: faList,
-        children: [
-          { label: 'Add Vehicle Model', path: '/vehicle/vehiclemodel/add', icon: faPlus },
-          { label: 'List Vehicle Model', path: '/vehicle/vehiclemodel/list', icon: faCarAlt },
-        ],
-      },
-      {
-        label: 'Vehicle Master',
-        icon: faList,
-        children: [
-          { label: 'Add Vehicle Master', path: '/vehicle/vehiclemaster/add', icon: faPlus },
-          { label: 'List Vehicle Master', path: '/vehicle/vehiclemaster/list', icon: faTruck },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'Orders',
+    label: 'Bookings',
     icon: faClipboardList,
     children: [
-      { label: 'Confirm Pending List', path: '/orders/confirmpending', icon: faClipboardCheck },
-      { label: 'Close Pending List', path: '/orders/closepending', icon: faTimesCircle },
-      { label: 'Payment Pending List', path: '/orders/paymentpending', icon: faMoneyBillWave },
-      { label: 'Completed List', path: '/orders/completed', icon: faCheckCircle },
-      { label: 'Payment List', path: '/orders/paymentlist', icon: faCashRegister },
-      { label: 'List Cancel Order', path: '/orders/cancelled', icon: faTimesCircle },
-    ],
+      { label: 'New Booking',   path: '/bookings/add',  icon: faPlus },
+      { label: 'All Bookings',  path: '/bookings',       icon: faList },
+    ]
   },
+
+  // ── ORGANIZATIONS ─────────────────────────────
   {
-    label: 'Users',
-    icon: faUsers,
+    label: 'Organizations',
+    icon: faBuilding,
     children: [
-      { label: 'Add User', path: '/users/adduser', icon: faUserPen },
-      { label: 'User List', path: '/users/list', icon: faUserFriends }
-    ],
+      { label: 'All Organizations', path: '/organizations',      icon: faList },
+      { label: 'Add Organization',  path: '/organizations/add',  icon: faPlus },
+      { label: 'Org Users',         path: '/organizations/users',  icon: faUsers },
+      { label: 'Add Org User',      path: '/organizations/users/add', icon: faUserTie },
+    ]
   },
-   {
-    label: 'Monthly Bookings',
-    icon: faCalendarAlt,
-    children: [
-      { label: 'Monthly Invoice', path: '/booking/monthlybooking', icon: faCalendarCheck },
-      { label: 'Monthly Report', path: '/booking/monthlyreport', icon: faFileLines },
-      { label: 'OnCall Invoice', path: '/booking/oncallinvoice', icon: faFileLines },
-    ],
-  },
+
+  // ── VEHICLES ──────────────────────────────────
   {
-    label: 'Owners',
-    icon: faUserTie,
-    children: [
-      { label: 'Add Owner', path: '/vendors/add', icon: faUserPlus },
-      { label: 'List Owner', path: '/vendors/list', icon: faUser },
-    ],
+    label: 'Vehicles',
+    icon: faCar,
+    path: '/fleet/vehicles',
   },
+
+  // ── DRIVERS ───────────────────────────────────
   {
     label: 'Drivers',
-    icon: faUserSecret,
+    icon: faUserShield,
     children: [
-      { label: 'Add Driver', path: '/drivers/add', icon: faUserPlus },
-      { label: 'List Driver', path: '/drivers/list', icon: faUser },
-      { label: 'List Assigned Task', path: '/drivers/assignedlist', icon: faTruck },
-        { label: 'Trip Details', path: '/drivers/tripdetails', icon: faTruck },
-    ],
+      { label: 'All Drivers', path: '/fleet/drivers',     icon: faList },
+      { label: 'Add Driver',  path: '/fleet/drivers/add', icon: faPlus },
+    ]
   },
-  
+
+  // ── CONTRACTS ─────────────────────────────────
   {
-    label: 'Invoice',
+    label: 'Contracts',
+    icon: faHandshake,
+    children: [
+      { label: 'All Contracts', path: '/contracts',     icon: faList },
+      { label: 'Add Contract',  path: '/contracts/add',  icon: faPlus },
+    ]
+  },
+
+  // ── MONTHLY BILLING ───────────────────────────
+  {
+    label: 'Monthly Billing',
+    icon: faCalculator,
+    path: '/admin/monthly-billing',
+  },
+
+  // ── INVOICES & PAYMENTS ───────────────────────
+  {
+    label: 'Invoices & Payments',
     icon: faFileInvoice,
     children: [
-      { label: 'Pending Invoices', path: '/invoice/pending', icon: faReceipt },
-      { label: 'Invoice Reminder', path: '/invoice/reminder', icon: faBell },
-      { label: 'Payment For Invoices', path: '/invoice/paymentfor', icon: faMoneyBillWave },
-      { label: 'Paid Invoice List', path: '/invoice/paid', icon: faCheckCircle },
-      { label: 'All Invoice List', path: '/invoice/all', icon: faList },
-      { label: 'Invoice Pay Holder', path: '/invoice/payholder', icon: faFileAlt },
-    ],
+      { label: 'Invoices Ledger',   path: '/invoices',  icon: faList },
+      { label: 'Payments History',  path: '/payments',  icon: faCreditCard },
+    ]
   },
+
+  // ── REPORTS ───────────────────────────────────
   {
     label: 'Reports',
     icon: faChartBar,
-    children: [
-      { label: 'Order Summary', path: '/reports/order-summary', icon: faClipboardCheck },
-      { label: 'Company Order Summary', path: '/reports/company-order-summary', icon: faBuilding },
-      { label: 'Overall Invoice Report', path: '/reports/overall-invoice-report', icon: faFileInvoice },
-    ],
+    path: '/reports',
   },
-  { label: 'Uploads', icon: faDatabase, path: '/uploads' },
-  { label: 'Cache', icon: faDatabase, path: '/cache' },
+
+  // ── SETTINGS ──────────────────────────────────
+  {
+    label: 'Settings',
+    icon: faCog,
+    children: [
+      { label: 'Payment Modes',   path: '/paymentmode/list',       icon: faMoneyBillWave },
+      { label: 'Tax Rates',       path: '/master/tax/list',        icon: faFileLines },
+      { label: 'Pickup Cities',   path: '/master/pickupcity/list', icon: faRoute },
+      { label: 'Email Config',    path: '/configuration/email',    icon: faFileLines },
+    ]
+  },
 ];
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ORGANIZATION MANAGER MENU
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const managerMenu: MenuItem[] = [
+  { label: 'Dashboard',   icon: faTachometerAlt, path: '/dashboard' },
+  { label: 'New Booking', icon: faPlus,          path: '/booking/create' },
+  {
+    label: 'Bookings',
+    icon: faClipboardList,
+    children: [
+      { label: 'My Requests',          path: '/orders/my-requests', icon: faList },
+      { label: 'Scheduled / Recurring',path: '/orders/scheduled',   icon: faCalendarAlt },
+    ]
+  },
+  {
+    label: 'Passengers',
+    icon: faUsers,
+    children: [
+      { label: 'Add Passenger',   path: '/users/adduser', icon: faUserTie },
+      { label: 'Passenger List',  path: '/users/list',    icon: faUsers },
+    ]
+  },
+  { label: 'Invoices', icon: faFileInvoice, path: '/invoice/pending' },
+  { label: 'Reports',  icon: faChartBar,    path: '/reports/company-order-summary' },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CUSTOMER / USER MENU
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const userMenu: MenuItem[] = [
+  { label: 'Dashboard',   icon: faTachometerAlt, path: '/customer/dashboard' },
+  { label: 'Book a Cab',  icon: faPlus,          path: '/customer/book' },
+  { label: 'My Bookings', icon: faClipboardList, path: '/customer/bookings' },
+  { label: 'Track Ride',  icon: faRoute,         path: '/customer/track' },
+  { label: 'Invoices',    icon: faFileInvoice,   path: '/customer/invoices' },
+  { label: 'Payments',    icon: faCreditCard,    path: '/customer/payments' },
+  { label: 'Profile',     icon: faUser,          path: '/customer/profile' },
+  { label: 'Logout',      icon: faSignOutAlt,    path: '/logout' },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DRIVER MENU
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const driverMenu: MenuItem[] = [
+  { label: 'Dashboard',    icon: faTachometerAlt, path: '/dashboard' },
+  { label: 'My Trips',     icon: faTruck,         path: '/drivers/assignedlist' },
+  { label: 'Trip History', icon: faCheckCircle,   path: '/drivers/tripdetails' },
+];
+
+const getMenuByRole = (role: string): MenuItem[] => {
+  const r = (role || '').toLowerCase();
+  if (['superadmin', 'admin', 'accountant', 'manager'].includes(r)) {
+    return superadminMenu;
+  }
+  if (r === 'driver') {
+    return driverMenu;
+  }
+  return userMenu;
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SIDEBAR COMPONENT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [openDropdown, setOpenDropdown] = useState<string[]>([]);
-  const [collapsed, setCollapsed] = useState(false);
+  const userRole = localStorage.getItem('role') || '';
+  const menu = getMenuByRole(userRole);
+
+  const handleLogout = () => {
+    const confirm = window.confirm('Are you sure you want to logout?');
+    if (!confirm) return;
+    logout();
+    if (userRole === 'customer') {
+      navigate('/login');
+    } else {
+      navigate('/adminlogin');
+    }
+  };
 
   const toggleDropdown = (label: string) => {
-    setOpenDropdown((prev: any) =>
+    setOpenDropdown((prev) =>
       prev.includes(label)
-        ? prev.filter((item: any) => item !== label)
+        ? prev.filter((item) => item !== label)
         : [...prev, label]
     );
   };
 
+  const isOpen = (label: string) => openDropdown.includes(label);
+
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen flex flex-col shadow-lg transition-all duration-300 ease-in-out
-        ${collapsed ? 'w-20' : 'w-70'}
-        z-40 bg-[#275981] text-[#ebf4f6]
-      `}
-      style={{ backdropFilter: 'blur(10px)' }}
+      className="fixed left-0 top-0 h-screen flex flex-col shadow-xl z-40 bg-[#1a3a52] text-[#e8eef2] w-64"
+      style={{ backdropFilter: 'blur(12px)' }}
     >
-  {/* Logo/Header */}
-<div className="sticky top-0 z-10">
-  <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-    {/* Logo */}
-    <img 
-      src="/images/favicon1.jpeg" 
-      alt="Driver logo" 
-      className="h-11 w-12 rounded-full" 
-    />
+      {/* ── Logo / Brand ── */}
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
+        <img
+          src="/images/favicon1.jpeg"
+          alt="Fleet Platform"
+          className="h-10 w-10 rounded-full object-cover ring-2 ring-white/30"
+        />
+        <div className="leading-tight">
+          <p className="text-xs text-white/50 uppercase tracking-widest font-semibold">Fleet Platform</p>
+          <p className="text-sm font-bold text-white">Transport Management</p>
+        </div>
+      </div>
 
-    {/* Text */}
-    <span className="text-xl font-bold text-white">
-      Grace Cabs
-    </span>
-  </div>
-</div>
-
-
-      {/* Menu */}
-      <nav className="flex-1 overflow-y-hidden hover:overflow-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent py-4 text-[#e8e9f2]">
-        <ul className="space-y-1">
+      {/* ── Navigation ── */}
+      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <ul className="space-y-0.5 px-2">
           {menu.map((item) => (
             <li key={item.label}>
-              {item.children ? (
+              {item.path === '/logout' ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-left text-[#b0c4d4] hover:bg-white/8 hover:text-white transition-all duration-150"
+                >
+                  <FontAwesomeIcon icon={item.icon} className="w-4 h-4 shrink-0 opacity-80" />
+                  <span>{item.label}</span>
+                </button>
+              ) : item.children ? (
                 <>
-                  {/* Parent Menu */}
+                  {/* Group header button */}
                   <button
-                    className={`flex items-center w-full px-6 py-3 transition-colors duration-200 ${collapsed ? 'justify-center' : ''
-                      } hover:bg-white hover:text-black`}
+                    className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      isOpen(item.label)
+                        ? 'bg-white/10 text-white'
+                        : 'hover:bg-white/8 text-[#b0c4d4] hover:text-white'
+                    }`}
                     onClick={() => toggleDropdown(item.label)}
                   >
-                    <FontAwesomeIcon icon={item.icon} className={`text-lg ${collapsed ? '' : 'mr-3'}`} />
-                    {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-                    {!collapsed && (
-                      <FontAwesomeIcon
-                        icon={openDropdown.includes(item.label) ? faChevronDown : faChevronRight}
-                        className="ml-auto"
-                      />
-                    )}
+                    <FontAwesomeIcon icon={item.icon} className="w-4 h-4 mr-3 shrink-0 opacity-80" />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <FontAwesomeIcon
+                      icon={isOpen(item.label) ? faChevronDown : faChevronRight}
+                      className="w-3 h-3 opacity-60 transition-transform duration-200"
+                    />
                   </button>
 
-                  {/* Submenus */}
-                  {openDropdown.includes(item.label) && !collapsed && (
-                    <ul className="ml-8 mt-1 space-y-1">
-                      {item.children.map((subItem) => (
-                        <li key={subItem.label}>
-                          {subItem.children ? (
-                            <>
-                              {/* Submenu with children */}
-                              <button
-                                className="flex items-center w-full px-4 py-2 hover:bg-white hover:text-black transition-colors duration-200"
-                                onClick={() => toggleDropdown(`${item.label}-${subItem.label}`)}
-                              >
-                                <FontAwesomeIcon icon={subItem.icon} className="mr-2 text-base" />
-                                <span className="flex-1 text-left">{subItem.label}</span>
-                                <FontAwesomeIcon
-                                  icon={openDropdown.includes(`${item.label}-${subItem.label}`) ? faChevronDown : faChevronRight}
-                                  className="text-xs"
-                                />
-                              </button>
-
-                              {/* Final Nested Links */}
-                              {openDropdown.includes(`${item.label}-${subItem.label}`) && (
-                                <ul className="ml-6 mt-1 space-y-1">
-                                  {subItem.children?.map((child) => (
-                                    <li key={child.label}>
-                                      <NavLink
-                                        to={child.path || '#'}
-                                        className={({ isActive }) =>
-                                          `flex items-center px-4 py-1.5 transition-colors duration-200 rounded-md 
-                                          ${isActive ? 'bg-white text-black' : 'hover:bg-white hover:text-black'}`
-                                        }
-                                      >
-                                        <FontAwesomeIcon icon={child.icon} className="mr-2" />
-                                        {child.label}
-                                      </NavLink>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </>
-                          ) : (
-                            // Direct Submenu Link
-                            <NavLink
-                              to={subItem.path || '#'}
-                              className={({ isActive }) =>
-                                `flex items-center px-4 py-2 transition-colors duration-200 rounded-md 
-                                ${isActive ? 'bg-white text-black' : 'hover:bg-white hover:text-black'}`
-                              }
-                            >
-                              <FontAwesomeIcon icon={subItem.icon} className="mr-2 text-base" />
-                              {subItem.label}
-                            </NavLink>
-                          )}
+                  {/* Children */}
+                  {isOpen(item.label) && (
+                    <ul className="mt-0.5 ml-5 space-y-0.5 border-l border-white/10 pl-2">
+                      {item.children.map((sub) => (
+                        <li key={sub.label}>
+                          <NavLink
+                            to={sub.path || '#'}
+                            className={({ isActive }) =>
+                              `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
+                                isActive
+                                  ? 'bg-[#3b82f6] text-white shadow-sm'
+                                  : 'text-[#94b4c7] hover:bg-white/8 hover:text-white'
+                              }`
+                            }
+                          >
+                            <FontAwesomeIcon icon={sub.icon} className="w-3.5 h-3.5 shrink-0" />
+                            {sub.label}
+                          </NavLink>
                         </li>
                       ))}
                     </ul>
                   )}
                 </>
               ) : (
-                // Single-level menu
+                // Single link item
                 <NavLink
                   to={item.path || '#'}
                   className={({ isActive }) =>
-                    `flex items-center px-6 py-3 transition-colors duration-200 rounded-md 
-                    ${collapsed ? 'justify-center' : ''} 
-                    ${isActive ? 'bg-white text-black' : 'hover:bg-white hover:text-black'}`
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      isActive
+                        ? 'bg-[#3b82f6] text-white shadow-sm'
+                        : 'text-[#b0c4d4] hover:bg-white/8 hover:text-white'
+                    }`
                   }
                 >
-                  <FontAwesomeIcon icon={item.icon} className={`text-lg ${collapsed ? '' : 'mr-3'}`} />
-                  {!collapsed && <span>{item.label}</span>}
+                  <FontAwesomeIcon icon={item.icon} className="w-4 h-4 shrink-0 opacity-80" />
+                  <span>{item.label}</span>
                 </NavLink>
               )}
             </li>
           ))}
         </ul>
       </nav>
+
+      {/* ── Footer ── */}
+      <div className="px-5 py-3 border-t border-white/10">
+        <p className="text-[10px] text-white/30 text-center uppercase tracking-widest">
+          Fleet & Transport Platform
+        </p>
+      </div>
     </aside>
   );
 };
 
 export default Sidebar;
-

@@ -18,7 +18,7 @@ const handleOrderStatus = async (req: Request, res: Response, status: number) =>
     }
 
     // Fetch orders by status
-    const orders = await getOrdersByStatus(status);
+    const orders = await (getOrdersByStatus as any)(status, (req as any).operatorId);
 
     return res.status(200).json({
       success: true,

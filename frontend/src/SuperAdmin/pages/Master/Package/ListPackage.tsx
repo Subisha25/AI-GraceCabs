@@ -146,14 +146,17 @@ const ListPackage: React.FC = () => {
 
   const fetchMasterVehicleTypes = async (): Promise<string[]> => {
     try {
-      const res = await axiosInstance.get("/vehicleType/getAllVehicleType", {
-        params: { status: 0 },
-      });
+      const res = await axiosInstance.get("/vehicles");
 
-      const list: VehicleTypeMaster[] = res.data?.data || [];
-      const names = list
-        .filter((x) => !x.isDeleted)
-        .map((x) => String(x.vehicleType));
+      const list: any[] = res.data?.data || [];
+      const seen = new Set<string>();
+      const names: string[] = [];
+      list.forEach((x) => {
+        if (x.vehicle_type && !seen.has(x.vehicle_type)) {
+          seen.add(x.vehicle_type);
+          names.push(String(x.vehicle_type));
+        }
+      });
 
       setMasterVehicleTypes(names);
       return names;

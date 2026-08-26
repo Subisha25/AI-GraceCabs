@@ -81,7 +81,9 @@ const [otp, setOtp] = useState('');
         setErrors({ server: 'Login failed. Please try again.' });
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || 'Login failed. Please check credentials.';
+      const errorMsg = !error?.response
+        ? "Unable to connect to the server. Please make sure the application server is running."
+        : (error.response.data?.message || 'Login failed. Please check credentials.');
       setErrors((prev) => ({ ...prev, server: errorMsg }));
     }
   };

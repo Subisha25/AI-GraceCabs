@@ -535,7 +535,7 @@ height:38px;">
 
 <!-- HEADER -->
 <div class="page-header">
-  ${logoSrc ? `<img src="${logoSrc}" class="logo" />` : `<div><b style="font-size:16px;color:#1a4f7a;">Grace Cabs</b></div>`}
+  ${logoSrc ? `<img src="${logoSrc}" class="logo" />` : `<div><b style="font-size:16px;color:#1a4f7a;">New Local AI Mobility Platform</b></div>`}
   <div class="header-right">
     <div class="inv-no">Invoice No: ${invoiceCode}</div>
     <div>Invoice Date: ${invoiceDate}</div>
@@ -551,7 +551,7 @@ height:38px;">
   <!-- LEFT COLUMN: BILLING FROM -->
   <div class="billing-box">
     <div class="billing-label">Billing From</div>
-    <div class="billing-row" style="font-weight: bold; color: #1a4f7a;">Grace Cabs Private Limited</div>
+    <div class="billing-row" style="font-weight: bold; color: #1a4f7a;">New Local AI Mobility Platform Private Limited</div>
     <div class="billing-row">7/621 Nesamani Nagar</div>
     <div class="billing-row">Perumbakkam</div>
     <div class="billing-row">Chennai - 600100</div>
@@ -612,9 +612,9 @@ height:38px;">
 <!-- FOOTER -->
 <div class="footer">
   <div>
-    <div><b>Grace Cabs Pvt. Ltd.</b></div>
+    <div><b>New Local AI Mobility Platform Pvt. Ltd.</b></div>
     <div>7/621 Nesamani Nagar, Perumbakkam, Chennai - 600100</div>
-    <div>Website: gracecabs.com</div>
+    <div>Website: localhost:3000</div>
   </div>
   <div>
     <div><b>GSTIN:</b> 33AAMCG2518C1Z0</div>

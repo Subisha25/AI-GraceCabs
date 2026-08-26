@@ -829,22 +829,18 @@ const AddDriverForm: React.FC = () => {
     }
 
     const payload = {
-      driverName: formData.name,
+      name: formData.name,
       password: formData.password,
-      driverEmail: formData.email,
-      phno: formData.phone,
-      city: formData.city,
-      state: formData.state,
-      country: formData.country,
-      pincode: formData.pincode,
+      email: formData.email || null,
+      mobile: formData.phone,
       address: `${formData.address1}${formData.address2 ? ", " + formData.address2 : ""}`,
-      licenseNo: formData.licenseNo,
-      licExpDate: formData.licExpDate,
-      trackingSource: formData.trackingSource,
+      license_number: formData.licenseNo,
+      license_expiry: formData.licExpDate || null,
+      status: "active"
     };
 
     try {
-      await axiosInstance.post("/vendor/createDriver", payload);
+      await axiosInstance.post("/drivers", payload);
       showToast("Driver created successfully!", "success");
 
       setFormData({

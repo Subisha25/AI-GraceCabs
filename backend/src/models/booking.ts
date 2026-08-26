@@ -22,6 +22,8 @@ import { BookingSequence } from './booking_sequence';
 import { ClosePending } from './closepending';
 import { VehicleMaster } from './vehicleMaster';
 import { Company } from './company';
+import { FleetOperator } from './fleetOperator';
+import { BookingPassenger } from './bookingPassenger';
 
 @Table({
   tableName: 'booking',
@@ -29,6 +31,26 @@ import { Company } from './company';
   updatedAt: false,
 })
 export class Booking extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    defaultValue: 'ORGANIZATION',
+  })
+  bookingType!: string;
+
+  @HasMany(() => BookingPassenger)
+  bookingPassengers!: BookingPassenger[];
+
   @PrimaryKey
   @Column({
     type: DataType.UUID,

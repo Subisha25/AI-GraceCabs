@@ -75,14 +75,14 @@ const MDMessageSection: React.FC = () => {
     Dr. Robert Jayakumar
   </h3>
   <p className="text-sm text-slate-600 font-medium">Managing Director</p>
-  <p className="text-xs text-slate-500">Grace Cabs Private Limited</p>
+  <p className="text-xs text-slate-500">New Local AI Mobility Platform Private Limited</p>
 </div>
 
            
 
             <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed text-justify">
               <p >
-                On behalf of the entire team at Grace Cabs Private Limited, I am
+                On behalf of the entire team at New Local AI Mobility Platform Private Limited, I am
                 thrilled to welcome you to our world of exceptional travel
                 experiences.
               </p>
@@ -92,10 +92,10 @@ const MDMessageSection: React.FC = () => {
               </p>
              
               <p>
-                Grace Cabs Private Limited is the leading provider of premium
+                New Local AI Mobility Platform Private Limited is the leading provider of premium
                 integrated end-to-end transportation solutions for the corporate
                 sector across the metro cities in Southern India. Since its
-                establishment in 2003, Grace Cabs has been committed to providing
+                establishment in 2003, New Local AI Mobility Platform has been committed to providing
                 unparalleled travel arrangements that cater to the individual needs
                 and preferences of our clients.
               </p>

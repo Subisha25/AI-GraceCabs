@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 interface AuthenticatedRequest extends Request {
-  userId?: number;
+  userId?: string;
   role?: string;
+  operatorId?: string;
+  companyId?: string;
 }
 
 export const authMiddleware = (  req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -19,14 +21,16 @@ export const authMiddleware = (  req: AuthenticatedRequest, res: Response, next:
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: number;
+      userId: string | number;
       roles: string;
+      operatorId?: string;
+      companyId?: string;
     };
 
-    req.userId = decoded.userId;
+    req.userId = String(decoded.userId);
     req.role = decoded.roles;
-    //console.log("userid & role: ",req.userId,req.role);
-   
+    req.operatorId = decoded.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a';
+    req.companyId = decoded.companyId;
 
     next();
   } catch (err) {

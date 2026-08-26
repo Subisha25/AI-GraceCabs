@@ -196,7 +196,7 @@ const HowItWorks = () => {
               Ready to Book Your Cab?
             </h3>
             <p className="text-gray-200 text-lg mb-8">
-              Experience seamless booking with Grace Cabs - Your trusted travel
+              Experience seamless booking with New Local AI Mobility Platform - Your trusted travel
               partner
             </p>
             <motion.button

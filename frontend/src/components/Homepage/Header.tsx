@@ -1,808 +1,495 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import Banner from "../../assets/hero.png";
-import Logo from "../../assets/logo.png";
-import PhoneIcon from "../../assets/phone.png";
-import MailIcon from "../../assets/mail.png";
-import LoginIcon from "../../assets/login.png";
-import SupportIcon from "../../assets/support.png";
-import YellowBg from "../../assets/bgyellow.png";
-import MobileYellow from "../../assets/header/mobileyellow.png";
-import MobileMail from "../../assets/header/mobilemail.png";
-import MobilePhone from "../../assets/header/phonemobileicon.png";
-import MobileHero from "../../assets/header/mobilehero.png";
-import { useNavigate } from "react-router-dom";
-import mobilesuppoticon from "../../assets/header/supportmobile.png"
-import MobileToggleIcon from "../../assets/header/Group 21.png"
-import mobilelogo from "../../assets/header/mobilelogo.png"
+// Brand constants
+const SUPPORT_PHONE = '+1 800-SWIFTRIDE';
+const SUPPORT_EMAIL = 'support@swiftride.app';
 
-export default function HeaderHero() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileSize, setMobileSize] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
+const Header: React.FC = () => {
+  const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-useEffect(() => {
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 10);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleBookCab = () => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (token) {
+      if (role === 'customer') {
+        navigate('/customer/book');
+      } else if (['superadmin', 'admin', 'accountant', 'manager'].includes(role || '')) {
+        navigate('/dashboard');
+      } else {
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
   };
 
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
-
-const scrollToSection = (id: string) => {
-  const section = document.getElementById(id);
-  if (!section) return;
-
-  // Detect correct header height based on screen + scroll
-  let headerHeight;
-
-  if (window.innerWidth < 768) {
-    // MOBILE
-    headerHeight = isScrolled ? 80 : 150; 
-  } else {
-    // DESKTOP
-    headerHeight = isScrolled ? 80 : 120;
-  }
-
-  const elementPosition =
-    section.getBoundingClientRect().top + window.pageYOffset;
-
-  const offsetPosition = elementPosition - headerHeight;
-
-  window.scrollTo({
-    top: offsetPosition,
-    behavior: "smooth",
-  });
-};
-
-const navigate = useNavigate();
-
-const [isScrolled, setIsScrolled] = useState(false);
-useEffect(() => {
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 20);
+  const scrollTo = (id: string) => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
-  window.addEventListener("scroll", handleScroll);
-  const handleResize = () => setMobileSize(window.innerWidth);
-  window.addEventListener("resize", handleResize);
-  return () => {
-    window.removeEventListener("scroll", handleScroll);
-    window.removeEventListener("resize", handleResize);
-  };
-}, []);
 
+  return (
+    <>
+      {/* ── GLOBAL FONT ── */}
+      <style>{`
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .sr-nav-link {
+          font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9);
+          transition: color 0.2s; cursor: pointer; padding: 4px 0;
+          border-bottom: 2px solid transparent; transition: all 0.2s;
+        }
+        .sr-nav-link:hover { color: #F59E0B; border-bottom-color: #F59E0B; }
+        .sr-nav-link-dark { color: #1B4F8A; }
+        .sr-nav-link-dark:hover { color: #F59E0B; }
+      `}</style>
 
-
-return (
-  <div className="bg-white p-[3px] md:p-[6px] rounded-bl-[45px] rounded-br-[45px]">
-
-    {/* -------------------------------------------------- */}
-    {/* ⭐⭐⭐ MOBILE VIEW SECTION (Only for <768px) ⭐⭐⭐ */}
-    {/* -------------------------------------------------- */}
-<section className="relative w-full min-h-[650px] block md:hidden bg-white">
-
-{/* ⭐ FIXED FIGMA YELLOW BAR — PERFECT SIZE & ALIGNMENT */}
-<div
-  className={`
-    fixed top-0 left-0 w-full h-[60px] z-[300]
-    transition-all duration-300
-    ${isScrolled ? "bg-white shadow-md" : ""}
-  `}
->
-  <img
-    src={MobileYellow}
-    className="absolute top-0 left-0 w-full h-full object-cover object-top"
-    alt="yellow"
-  />
-
-  <div
-    className="
-      absolute inset-0 
-      flex items-center 
-      justify-center
-      yb-wrapper 
-      px-2 
-      gap-3
-      translate-y-[-3px]   /* ⭐ ICON ROW MELAA THALLI */
-    "
-  >
-
-    {/* SUPPORT ICON – BIGGER + SUPER CLEAR + BOLD FEEL */}
-    <div className="flex items-center gap-1">
-    <img
-  src={mobilesuppoticon}
-  className="yb-support-icon object-contain"
-  alt="support"
-/>
-
-    </div>
-
-   {/* PHONE */}
-<a
-  href="tel:+919841722675"
-  className="flex items-center gap-1"
->
-  <img
-    src={MobilePhone}
-    className="yb-icon object-contain"
-    alt="phone"
-  />
-  <span className="text-[#221C84] yb-text whitespace-nowrap font-bold">
-    +91 98417 22675
-  </span>
-</a>
-
-
-   {/* MAIL */}
-<a
-  href="mailto:traveldesk@gracecabs.com"
-  className="flex items-center gap-1"
->
-  <img
-    src={MobileMail}
-    className="yb-icon object-contain"
-    alt="mail"
-  />
-  <span className="text-[#221C84] yb-text whitespace-nowrap font-bold">
-    traveldesk@gracecabs.com
-  </span>
-</a>
-
-
-  </div>
-</div>
-
-
-{/* ⭐ 2. LOGO + TOGGLE (ONLY toggle changes color) */}
-<div
-  className={`
-    fixed top-[60px] left-0 w-full h-[60px] 
-    px-4 flex justify-between items-center 
-    transition-all duration-300 z-[350]
-    ${isScrolled ? "bg-white shadow-md" : "bg-transparent"}
-  `}
->
-  {/* LOGO — NO COLOR CHANGE */}
-  <img
-    src={Logo}
-    className="h-11 w-auto object-contain  mb-3"
-     onClick={() => scrollToSection("home")}
-    alt="Logo"
-  />
-
-  {/* TOGGLE BUTTON */}
-  <button onClick={() => setMenuOpen(!menuOpen)}>
-    {menuOpen ? (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-8 h-8"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke={isScrolled ? "#2C2474" : "white"}   // 🔥 ONLY TOGGLE CHANGES
-        strokeWidth={2}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    ) : (
-      <img
-        src={MobileToggleIcon}
-        className={`w-8 h-8 transition-all duration-300 
-          ${isScrolled ? "brightness-0 invert-[18%]" : ""}
-        `}
-        alt="menu"
-      />
-    )}
-  </button>
-</div>
-
-
-{/* ⭐ CENTER POPUP MENU - FULL SCREEN OVERLAY LIKE FIGMA */}
-{/* FULL SCREEN POPUP */}
-<div
-  className={`
-    fixed inset-0 
-    z-[500]
-    flex justify-center items-center
-    transition-all duration-300
-    ${menuOpen ? "opacity-100 visible" : "opacity-0 invisible"}
-  `}
->
-
-  {/* DARK OVERLAY */}
-  <div 
-    className={`
-      absolute inset-0 
-      bg-black/60 
-      backdrop-blur-sm
-      ${menuOpen ? "opacity-100" : "opacity-0"}
-    `}
-    onClick={() => setMenuOpen(false)}
-  ></div>
-
-{/* POPUP CARD */}
-<div
-  className={`
-    relative z-[600]
-    bg-white 
-    w-[85%] max-w-[380px]
-    rounded-xl shadow-xl 
-    p-6
-    max-h-none
-    overflow-visible
-    transform transition-all duration-300
-    mt-[-20px]                  /* ⭐ popup slightly upward */
-    ${menuOpen ? "scale-100" : "scale-50"}
-  `}
->
-
-
-  {/* LOGO */}
-  <div className="flex justify-center mb-4">
-    <img src={Logo} className="h-12 w-auto" />
-  </div>
-
-  {/* MENU ITEMS */}
-  <div className="flex flex-col text-[20px] font-semibold text-[#221C84]">
-
-    <span onClick={() => { scrollToSection("home"); setMenuOpen(false); }} className="py-4 border-b cursor-pointer">Home</span>
-    <span onClick={() => { scrollToSection("about"); setMenuOpen(false); }} className="py-4 border-b cursor-pointer">About</span>
-    <span onClick={() => { scrollToSection("services"); setMenuOpen(false); }} className="py-4 border-b cursor-pointer">Services</span>
-    <span onClick={() => { scrollToSection("portfolio"); setMenuOpen(false); }} className="py-4 border-b cursor-pointer">Portfolio</span>
-    <span onClick={() => { scrollToSection("contact"); setMenuOpen(false); }} className="py-4 border-b cursor-pointer">Contact</span>
-
-    <div className="mt-6">
-      <button
-        onClick={() => navigate("/fromdata")}
-        className="w-full px-5 py-3 rounded-full font-semibold text-[18px] bg-[#FFEC00] text-[#122163]"
-      >
-        Attach Car To Company
-      </button>
-    </div>
-
-    <div className="mt-4">
-      <button
-        onClick={() => navigate("/adminlogin")}
-        className="w-full px-5 py-3 rounded-full font-semibold text-[18px] border-2 border-[#122163] text-[#122163] bg-transparent"
-      >
-        Login
-      </button>
-    </div>
-
-  </div>
-
-  {/* ⭐ CLOSE BUTTON - ATTACHED TO POPUP BOTTOM CENTER ⭐ */}
-<button
-  onClick={() => setMenuOpen(false)}
-  className="
-    absolute left-1/2 -translate-x-1/2 
-    -bottom-10      /* ⭐ moved further down */
-    w-10 h-10 
-    bg-white rounded-full 
-    shadow-xl 
-    flex items-center justify-center
-  "
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-5 h-5 text-[#2C2474]"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth="2"
-    stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-</button>
-</div>
-</div>
-
-
-
-
-  {/* ⭐ 3. HERO SECTION — BG IMAGE moved up */}
-  <div
-    className="w-full"
-    style={{
-      backgroundImage: `url(${MobileHero})`,
-      backgroundSize: "cover",
-      backgroundRepeat: "no-repeat",
-
-      /* 🔥 BG image konjam MELAA */
-      backgroundPosition: "center 40px",
-
-      minHeight: "760px",
-    }}
-  >
-   <div className="pt-[180px] px-5">
-
-  {/* --- FIRST LINE --- */}
-  <h1 className="text-white text-[34px] font-extrabold leading-tight">
-    Corporate Commute,
-  </h1>
-
-  {/* --- SECOND LINE WITH PURPLE BG --- */}
-  <span
-    className="inline-block mt-1 font-extrabold text-white"
-    style={{
-      backgroundColor: "#2C2474",
-      padding: "6px 10px",
-      fontSize: "34px",
-      borderRadius: "4px",
-      lineHeight: "1.1",
-    }}
-  >
-    Elevated.
-  </span>
-
-  {/* SUBTEXT */}
-  <p className="text-white/90 text-[15px] mt-4 max-w-[260px] leading-snug">
-    Implies a premium, superior service level for professionals.
-  </p>
-</div>
-
-  </div>
-<style>
-{`
-  /* 320px — smallest devices */
-  @media (max-width: 340px) {
-    .yb-support-icon { width: 26px !important; height: 26px !important; }  /* bigger */
-    .yb-icon { width: 16px !important; height: 16px !important; }
-    .yb-text { font-size: 10px !important; font-weight: 700 !important; }
-    .yb-wrapper { gap: 6px !important; }
-  }
-
-  /* 375px devices — SUPPORT ICON BIGGER */
-  @media (min-width: 341px) and (max-width: 399px) {
-    .yb-support-icon { width: 34px !important; height: 34px !important; }  /* ⭐ bigger */
-    .yb-icon { width: 18px !important; height: 18px !important; }
-    .yb-text { font-size: 12px !important; font-weight: 700 !important; }
-    .yb-wrapper { gap: 10px !important; }
-  }
-
-  /* 425-475px — SUPPORT ICON EVEN BIGGER */
-  @media (min-width: 400px) {
-    .yb-support-icon { width: 40px !important; height: 40px !important; } /* ⭐ MAX SIZE */
-    .yb-icon { width: 22px !important; height: 22px !important; }
-    .yb-text { font-size: 14px !important; font-weight: 800 !important; }
-    .yb-wrapper { gap: 14px !important; }
-  }
-
-  /* TAB + SMALL LAPTOP VIEW FIX (768px – 1440px) */
-@media (min-width: 768px) and (max-width: 1440px) {
-  .hero-tab-fix {
-    background-position: center top !important; 
-    background-size: contain !important; 
-    background-repeat: no-repeat !important;
-    height: 680px !important;
-  }
-}
-
-/* 1024px – 1160px: IMAGE CUT FIX */
-@media (min-width: 1024px) and (max-width: 1160px) {
-  .hero-1024-fix {
-    background-size: contain !important;
-    background-position: top center right  !important;
-    background-repeat: no-repeat !important;
-    height: 680px !important;
-  }
-    /* 1024px – 1160px : LOGO ALIGN + SIZE FIX */
-@media (min-width: 1024px) and (max-width: 1160px) {
-  .logo  {
-    height: 40px !important;      /* size reduce */
-    margin-left: 10px !important; /* move left */
-  }
-}
-
-`}
-</style>
-
-
-
-</section>
-
-
-
- 
-{/* -------------------------------------------------- */}
-{/* ⭐⭐⭐ DESKTOP / LAPTOP VIEW — EXACT FIGMA LOOK ⭐⭐⭐ */}
-{/* -------------------------------------------------- */}
-
-<section className="relative hidden lg:block w-full">
-
-
-  {/* ⭐ HERO BANNER FULL WIDTH + CURVED TOP ⭐ */}
- <div
-  className="
-    relative w-full rounded-t-[45px] overflow-hidden 
-    pt-[120px] lg:h-[750px] md:h-[700px] h-[680px]  bg-[length:100%_100%]  hero-tablet-fix
-
-  "
-  style={{
-    backgroundImage: `url(${Banner})`,
-    backgroundSize: "100% auto",   // ⭐ Prevent crop
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "top center",
-
-  }}
->
-
-
-    {/* ⭐ HEADER OVERLAY ⭐ */}
-{/* ⭐ FIXED DESKTOP HEADER ⭐ */}
-<div
-  className={`
-    fixed top-0 left-0 w-full z-[200] 
-    transition-all duration-300
-    ${isScrolled ? "bg-white shadow-lg" : "bg-transparent"}
-  `}
->
-
-      {/* ⭐ TOP YELLOW BAR — EVEN MORE RIGHT ⭐ */}
-<div
-  className="w-full h-[58px] pr-32 flex items-center justify-end"
- 
->
-  {/* Content visible only when NOT scrolled */}
-  {!isScrolled && (
-    <div className="flex items-center gap-10 translate-y-[6px]">
-
-      <img src={SupportIcon} className="w-19 h-11" />
-
-      <div className="flex items-center gap-3">
-        <img src={PhoneIcon} className="w-6 h-6" />
-        <span className="text-white font-semibold text-[16px]">
-          +91 98417 22675
-        </span>
+      {/* ═══════════════════════════════════════════════
+          TOP INFO BAR
+      ═══════════════════════════════════════════════ */}
+      <div className="w-full bg-[#12376B] text-white text-xs py-1.5 px-4 hidden md:block">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5 opacity-80">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+              {SUPPORT_PHONE}
+            </span>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              {SUPPORT_EMAIL}
+            </a>
+          </div>
+          <div className="flex items-center gap-4 text-xs opacity-70">
+            <span>Individual · Fleet · Corporate · School</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <img src={MailIcon} className="w-6 h-6" />
-        <span className="text-white font-semibold text-[16px]">
-          traveldesk@gracecabs.com
-        </span>
-      </div>
-<button
-  onClick={() => {
-    navigate("/adminlogin");
-    window.scrollTo(0, 0);   // ⭐ Page top ku pogum
-  }}
- className={`px-4 py-1.5 rounded-md text-sm font-medium border 
-  transition-all duration-300 transform
-  ${
-    isScrolled
-      ? "border-[#2F1C84] text-[#2F1C84]"
-      : "border-yellow-400 text-yellow-400"
-  }
-  hover:scale-110 hover:bg-white/10
-`}
+      {/* ═══════════════════════════════════════════════
+          STICKY NAVBAR
+      ═══════════════════════════════════════════════ */}
+      <nav className={`sticky top-0 z-[400] w-full transition-all duration-300 ${
+        scrolled
+          ? 'bg-white shadow-lg border-b border-gray-100'
+          : 'bg-[#1B4F8A]'
+      }`}>
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
 
->
-  Login
-</button>
-    </div>
-  )}
-</div>
+          {/* Brand */}
+          <button
+            onClick={() => scrollTo('home')}
+            className="flex items-center gap-2.5 shrink-0"
+          >
+            {/* SwiftRide logo mark */}
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-md ${scrolled ? 'bg-[#1B4F8A]' : 'bg-white/20'}`}>
+              <svg className={`w-5 h-5 ${scrolled ? 'text-white' : 'text-[#F59E0B]'}`} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+              </svg>
+            </div>
+            <span className={`text-xl font-extrabold tracking-tight ${scrolled ? 'text-[#1B4F8A]' : 'text-white'}`}>
+              Swift<span className={scrolled ? 'text-[#F59E0B]' : 'text-[#F59E0B]'}>Ride</span>
+            </span>
+          </button>
 
+          <div className="hidden md:flex items-center gap-6">
+            <span className={`sr-nav-link ${scrolled ? 'sr-nav-link-dark' : ''}`} onClick={() => scrollTo('home')}>Home</span>
+            <span className={`sr-nav-link ${scrolled ? 'sr-nav-link-dark' : ''}`} onClick={() => navigate('/track-booking')}>Track Booking</span>
+            <span className={`sr-nav-link ${scrolled ? 'sr-nav-link-dark' : ''}`} onClick={() => scrollTo('about')}>About</span>
+            <span className={`sr-nav-link ${scrolled ? 'sr-nav-link-dark' : ''}`} onClick={() => scrollTo('services')}>Services</span>
+            <span className={`sr-nav-link ${scrolled ? 'sr-nav-link-dark' : ''}`} onClick={() => scrollTo('contact')}>Contact</span>
+          </div>
 
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => navigate('/login')}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
+                scrolled
+                  ? 'border-[#1B4F8A] text-[#1B4F8A] hover:bg-blue-50'
+                  : 'border-white/40 text-white hover:bg-white/10'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg ${
+                scrolled
+                  ? 'bg-[#F59E0B] text-gray-900 hover:bg-[#D97706]'
+                  : 'bg-[#F59E0B] text-gray-900 hover:bg-[#D97706]'
+              }`}
+            >
+              Register
+            </button>
+            <button
+              onClick={handleBookCab}
+              className="px-5 py-2 rounded-xl text-sm font-bold bg-white text-[#1B4F8A] hover:bg-blue-50 transition-all shadow-md hover:shadow-lg"
+            >
+              Book a Cab
+            </button>
+          </div>
 
-      {/* ⭐ NAV BAR — RIGHT MARGIN ADDED ⭐ */}
-      <div className="w-full flex items-center justify-between px-12 pr-20 mt-[-3px]">
-
-        {/* LOGO SMALL + LEFT PERFECT */}
-        <img
-          src={Logo}
-          className="h-[55px] w-auto  translate-y-[-20px] m2-5 logo "
-           onClick={() => scrollToSection("home")}
-        />
-
-        {/* MENU — RIGHT SIDE GAP MATCH */}
-<div
-  className={`
-    flex items-center gap-10 font-semibold  mr-6
-    ${isScrolled ? "translate-y-[-12px]" : "translate-y-[6px]"}
-    ${isScrolled ? "text-[#2C2474]" : "text-white"}
-  `}
->
-
-
-        <button onClick={() => scrollToSection("home")}>Home</button>
-                  <button onClick={() => scrollToSection("about")}>About</button>
-                  <button onClick={() => scrollToSection("services")}>Services</button>
-                  <button onClick={() => scrollToSection("portfolio")}>Portfolio</button>
-                  <button onClick={() => scrollToSection("contact")}>Contact</button>
-
-{isScrolled && (
-  <button
-    onClick={() => {
-      navigate("/adminlogin");
-      window.scrollTo(0, 0);
-    }}
-    className={`px-4 py-1.5 rounded-md text-sm font-medium border 
-      transition-all duration-300 transform
-      border-[#2F1C84] text-[#2F1C84]
-      hover:scale-110 hover:bg-white/10
-    `}
-  >
-    Login
-  </button>
-)}
-
-{!isScrolled && (
-  <button
-    onClick={() => {
-      navigate("/fromdata");
-      window.scrollTo(0, 0);
-    }}
-    className={`px-4 py-1.5 rounded-md text-sm font-medium border 
-      transition-all duration-300 transform
-      bg-[#FFEC00] text-blue-900 border-[#FFEC00]
-      hover:scale-105 hover:-translate-y-1 hover:shadow-lg
-    `}
-  >
-    ATTACH CAR TO COMPANY
-  </button>
-)}
-
-{isScrolled && (
-  <button
-    onClick={() => {
-      navigate("/fromdata");
-      window.scrollTo(0, 0);
-    }}
-    className={`px-4 py-1.5 rounded-md text-sm font-medium border 
-      transition-all duration-300 transform
-      bg-[#FFEC00] text-blue-900 border-[#FFEC00]
-      hover:scale-105 hover:-translate-y-1 hover:shadow-lg
-    `}
-  >
-    ATTACH CAR TO COMPANY
-  </button>
-)}
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2 rounded-lg"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <svg className={`w-6 h-6 ${scrolled ? 'text-[#1B4F8A]' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              }
+            </svg>
+          </button>
         </div>
 
-      </div>
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 shadow-xl">
+            <div className="px-4 py-4 space-y-1">
+              {['home', 'about', 'services', 'contact'].map((section) => (
+                <button
+                  key={section}
+                  onClick={() => scrollTo(section)}
+                  className="w-full text-left px-3 py-2.5 text-[#1B4F8A] font-semibold text-sm rounded-lg hover:bg-blue-50 capitalize"
+                >
+                  {section}
+                </button>
+              ))}
+              <div className="pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+                <button onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                  className="py-2.5 text-center text-sm font-semibold border border-[#1B4F8A] text-[#1B4F8A] rounded-xl">
+                  Login
+                </button>
+                <button onClick={() => { navigate('/register'); setMobileMenuOpen(false); }}
+                  className="py-2.5 text-center text-sm font-bold bg-[#F59E0B] text-gray-900 rounded-xl">
+                  Register
+                </button>
+              </div>
+              <button onClick={() => { handleBookCab(); setMobileMenuOpen(false); }}
+                className="w-full mt-1 py-3 text-center text-sm font-bold bg-[#1B4F8A] text-white rounded-xl">
+                Book a Cab
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
 
-    </div>
+      {/* ═══════════════════════════════════════════════
+          HERO SECTION
+      ═══════════════════════════════════════════════ */}
+      <section id="home" className="relative min-h-[88vh] flex items-center overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #0d2544 0%, #1B4F8A 45%, #1e6fbc 100%)' }}>
 
-    {/* ⭐ HERO TEXT BLOCK ⭐ */}
-<div className="absolute top-[160px] left-[80px] max-w-[800px] z-[20]">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
+          </svg>
+        </div>
 
-<h1
-  className="
-    text-white
-    font-extrabold 
-    leading-[1.1]
+        {/* Decorative circles */}
+        <div className="absolute top-[-80px] right-[-80px] w-80 h-80 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-60px] left-[-60px] w-64 h-64 bg-[#F59E0B]/10 rounded-full blur-2xl" />
 
-    text-[55px]      
-    md:text-[65px]   
-    lg:text-[75px]   
+        <div className="relative max-w-6xl mx-auto px-4 py-16 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-    tracking-[-0.5px]
-    max-w-[1650px]      /* ⭐ EXTRA LENGTH */
-  "
->
-  Corporate Commute,
-  <span className="block text-[#2F1C84] font-extrabold">
-    Elevated.
-  </span>
-</h1>
+            {/* Left — Headline */}
+            <div className="space-y-6">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-white/90 text-xs font-semibold">
+                <span className="w-2 h-2 bg-[#F59E0B] rounded-full animate-pulse" />
+                Professional Transport Platform
+              </div>
 
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
+                Your Ride.<br />
+                Your Time.<br />
+                <span className="text-[#F59E0B]">Your Journey.</span>
+              </h1>
 
- <p className="text-black/95 text-[18px] mt-4">
-  Implies a premium, superior service level 
-  <span className="block">for professionals.</span>
-</p>
+              <p className="text-white/75 text-lg md:text-xl leading-relaxed max-w-lg">
+                Simple, fast and reliable cab booking for individuals, corporates, schools and organisations.
+              </p>
 
-</div>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <button
+                  onClick={handleBookCab}
+                  id="hero-book-cab-btn"
+                  className="flex items-center gap-2 px-7 py-3.5 bg-[#F59E0B] hover:bg-[#D97706] text-gray-900 font-extrabold rounded-2xl shadow-xl hover:shadow-2xl transition-all text-base"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/>
+                  </svg>
+                  Book a Cab
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-7 py-3.5 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold rounded-2xl transition-all text-base backdrop-blur-sm"
+                >
+                  Login
+                </button>
+              </div>
 
+              {/* Trust badges */}
+              <div className="flex flex-wrap gap-4 pt-2">
+                {[
+                  { icon: '✓', text: 'Instant Booking' },
+                  { icon: '✓', text: 'Real-time Tracking' },
+                  { icon: '✓', text: 'Verified Drivers' },
+                  { icon: '✓', text: 'Digital Invoice' },
+                ].map((b) => (
+                  <span key={b.text} className="flex items-center gap-1.5 text-white/70 text-sm">
+                    <span className="text-[#F59E0B] font-bold">{b.icon}</span>
+                    {b.text}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-  </div>
-</section>
+            {/* Right — Showcase Card */}
+            <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 text-white space-y-6">
+                <h3 className="text-xl font-bold text-[#F59E0B]">Why Travel With Us?</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#F59E0B]/20 flex items-center justify-center text-[#F59E0B] font-bold shrink-0 mt-0.5">✓</div>
+                    <div>
+                      <h4 className="font-semibold text-sm">Corporate Transport Roster</h4>
+                      <p className="text-xs text-white/70 mt-0.5">Automated booking rosters and customized contracts for businesses.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#F59E0B]/20 flex items-center justify-center text-[#F59E0B] font-bold shrink-0 mt-0.5">✓</div>
+                    <div>
+                      <h4 className="font-semibold text-sm">Professional Fleet Support</h4>
+                      <p className="text-xs text-white/70 mt-0.5">Toyota Innova Crysta, Suzuki Dzire and high-efficiency models.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#F59E0B]/20 flex items-center justify-center text-[#F59E0B] font-bold shrink-0 mt-0.5">✓</div>
+                    <div>
+                      <h4 className="font-semibold text-sm">Automatic Digital Invoices</h4>
+                      <p className="text-xs text-white/70 mt-0.5">Receive structured trip summaries and tax invoices instantly on trip completion.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-white/10">
+                  <button
+                    onClick={handleBookCab}
+                    className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] text-gray-900 font-extrabold rounded-xl transition-all shadow-md text-sm"
+                  >
+                    Get Started Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Wave divider */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+          <svg className="relative block w-full h-12 md:h-16" viewBox="0 0 1440 60" preserveAspectRatio="none">
+            <path d="M0,60 C360,0 1080,60 1440,20 L1440,60 Z" fill="#F8FAFF"/>
+          </svg>
+        </div>
+      </section>
 
+      {/* ═══════════════════════════════════════════════
+          HOW IT WORKS
+      ═══════════════════════════════════════════════ */}
+      <section id="about" className="py-16 bg-[#F8FAFF]">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="text-[#F59E0B] font-bold text-sm uppercase tracking-widest">Simple Process</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mt-2">How SwiftRide Works</h2>
+            <p className="text-gray-500 mt-3 max-w-lg mx-auto">Book your ride in minutes — no complexity, no confusion.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              { step: '01', icon: '📍', title: 'Enter Route', desc: 'Enter pickup and drop locations with date and time.' },
+              { step: '02', icon: '🚗', title: 'Choose Vehicle', desc: 'Compare vehicle types, seats and fare estimates instantly.' },
+              { step: '03', icon: '✅', title: 'Confirm Booking', desc: 'Review and confirm your booking in one tap.' },
+              { step: '04', icon: '🗺️', title: 'Track & Ride', desc: 'Track your driver live and receive real-time updates.' },
+            ].map((item) => (
+              <div key={item.step} className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+                <div className="text-3xl mb-3">{item.icon}</div>
+                <div className="absolute top-4 right-4 text-2xl font-extrabold text-gray-100">{item.step}</div>
+                <h3 className="font-bold text-gray-800 mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* ═══════════════════════════════════════════════
+          SERVICES
+      ═══════════════════════════════════════════════ */}
+      <section id="services" className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="text-[#F59E0B] font-bold text-sm uppercase tracking-widest">Our Services</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mt-2">Transport for Every Need</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: '👤',
+                title: 'Individual Booking',
+                desc: 'Book a cab instantly for yourself. One-way or round trips, any time.',
+                color: 'from-blue-50 to-indigo-50',
+                border: 'border-blue-100',
+              },
+              {
+                icon: '🏢',
+                title: 'Corporate & Organisations',
+                desc: 'Monthly transport contracts for schools, colleges, hospitals and companies.',
+                color: 'from-amber-50 to-yellow-50',
+                border: 'border-amber-100',
+              },
+              {
+                icon: '🚛',
+                title: 'Fleet Management',
+                desc: 'Operators manage vehicles, drivers, bookings and payments in one platform.',
+                color: 'from-emerald-50 to-teal-50',
+                border: 'border-emerald-100',
+              },
+            ].map((card) => (
+              <div key={card.title} className={`rounded-2xl p-6 bg-gradient-to-br ${card.color} border ${card.border} hover:shadow-md transition-shadow`}>
+                <div className="text-4xl mb-4">{card.icon}</div>
+                <h3 className="font-extrabold text-gray-800 text-lg mb-2">{card.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{card.desc}</p>
+                <button
+                  onClick={handleBookCab}
+                  className="mt-4 text-[#1B4F8A] font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all"
+                >
+                  Get Started
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-{/* ⭐⭐ TABLET VIEW — 768px TO 1220px ⭐⭐ */}
-<section className="relative hidden md:block lg:hidden w-full">
+      {/* ═══════════════════════════════════════════════
+          WHY SWIFTRIDE
+      ═══════════════════════════════════════════════ */}
+      <section className="py-16 bg-[#F8FAFF]">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <span className="text-[#F59E0B] font-bold text-sm uppercase tracking-widest">Why SwiftRide</span>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mt-2 mb-6">
+                Built for Modern Transport Needs
+              </h2>
+              <div className="space-y-4">
+                {[
+                  { title: 'Real-time Tracking', desc: 'Track your driver on a live map from pick-up to destination.' },
+                  { title: 'Digital Invoicing', desc: 'Automatic invoice generation with PDF download after every trip.' },
+                  { title: 'Multiple Payment Options', desc: 'Pay by cash or online — flexible for every customer.' },
+                  { title: 'Role-based Access', desc: 'Separate portals for customers, drivers, operators and organisations.' },
+                  { title: 'Tenant Isolation', desc: 'Complete data isolation — your data never crosses operator boundaries.' },
+                ].map((item) => (
+                  <div key={item.title} className="flex gap-3">
+                    <div className="shrink-0 w-5 h-5 rounded-full bg-[#1B4F8A] flex items-center justify-center mt-0.5">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800 text-sm">{item.title}</p>
+                      <p className="text-gray-500 text-sm">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-  {/* ⭐ BG WRAPPER ⭐ */}
- {/* ⭐ BG WRAPPER ⭐ */}
-<div
-  className="
-    relative w-full overflow-hidden 
-    pt-[490px]        /* ⭐ correct spacing */
-    min-h-[580px]     /* ⭐ banner correct height */
-    h-auto            /* ⭐ removes unwanted white gap */
-    rounded-t-[40px]
-  "
-  style={{
-    backgroundImage: `url(${Banner})`,
-    backgroundSize: "cover",
-backgroundPosition: "left -80px top",  // ⭐ shifts image to left
-    backgroundRepeat: "no-repeat",
-  }}
->
+            {/* CTA card */}
+            <div className="bg-gradient-to-br from-[#1B4F8A] to-[#0d2544] rounded-3xl p-8 text-white text-center shadow-2xl">
+              <div className="text-5xl mb-4">🚖</div>
+              <h3 className="text-2xl font-extrabold mb-3">Ready to Ride?</h3>
+              <p className="text-white/70 mb-6 text-sm leading-relaxed">
+                Join thousands of customers who trust SwiftRide for reliable, professional transport every day.
+              </p>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full py-3.5 bg-[#F59E0B] hover:bg-[#D97706] text-gray-900 font-extrabold rounded-xl transition-all shadow-lg text-sm"
+              >
+                Create Free Account
+              </button>
+              <button
+                onClick={handleBookCab}
+                className="w-full mt-3 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-xl transition-all text-sm"
+              >
+                Book a Cab Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      {/* ═══════════════════════════════════════════════
+          CONTACT SECTION
+      ═══════════════════════════════════════════════ */}
+      <section id="contact" className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <span className="text-[#F59E0B] font-bold text-sm uppercase tracking-widest">Get in Touch</span>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mt-2 mb-4">We're Here to Help</h2>
+          <p className="text-gray-500 mb-8">Have questions about bookings, billing or fleet management? Our support team is ready.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+            <a
+              href={`tel:${SUPPORT_PHONE.replace(/[^0-9+]/g, '')}`}
+              className="flex items-center justify-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-[#1B4F8A] hover:bg-blue-50 transition-all"
+            >
+              <svg className="w-5 h-5 text-[#1B4F8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <div className="text-left">
+                <p className="text-xs text-gray-400 font-semibold uppercase">Call Us</p>
+                <p className="font-bold text-gray-800 text-sm">{SUPPORT_PHONE}</p>
+              </div>
+            </a>
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="flex items-center justify-center gap-3 p-4 rounded-2xl border border-gray-200 hover:border-[#1B4F8A] hover:bg-blue-50 transition-all"
+            >
+              <svg className="w-5 h-5 text-[#1B4F8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <div className="text-left">
+                <p className="text-xs text-gray-400 font-semibold uppercase">Email Us</p>
+                <p className="font-bold text-gray-800 text-sm">{SUPPORT_EMAIL}</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+};
 
-
-    {/* ⭐ 1. YELLOW BAR (only when NOT scrolled) ⭐ */}
-    {!isScrolled && (
-      
-       <div
-  className="
-    fixed top-0 right-0
-    h-[50px]
-    flex items-center justify-end
-    pr-[30px] 
-    z-[600]
-
-    /* ⭐ width reduced and aligned to menu */
-    w-[60%]
-  "
-
->
-  <div className="flex items-center gap-2">
-    <img src={SupportIcon} className="w-9 h-6" />
-
-    <div className="flex items-center gap-2 whitespace-nowrap">
-  <img src={PhoneIcon} className="w-3 h-3" />
-  <span className="text-white text-[13px] font-medium leading-none">
-    +91 98417 22675
-  </span>
-</div>
-
-
- <div className="flex items-center gap-2 whitespace-nowrap">
-  <img src={MailIcon} className="w-3 h-3" />
-  <span className="text-white text-[13px] font-medium leading-none">
-    traveldesk@gracecabs.com
-  </span>
-</div>
-<button
-    onClick={() => {
-      navigate("/adminlogin");
-      window.scrollTo(0, 0);
-    }}
-  className={`
-    px-4 py-1 rounded-md text-[13px] border transition-all duration-300
-    ${
-      isScrolled
-        ? "border-[#2C2474] text-[#2C2474]"
-        : "border-yellow-300 text-yellow-300"
-    }
-  `}
->
-  Login
-</button>
-
-  </div>
-</div>
-
-    )}
-
-    {/* ⭐ 2. HEADER (scroll sticky) ⭐ */}
-    <div
-      className={`
-        fixed ${isScrolled ? "top-0" : "top-[50px]"} 
-        left-0 w-full
-        z-[650]
-        flex justify-between items-center
-        px-6 py-3
-        transition-all duration-300
-        ${isScrolled ? "bg-white shadow-md" : "bg-transparent"}
-      `}
-    >
-
-      {/* ⭐ LOGO — SCROLL LOGIC ⭐ */}
-     {/* ⭐ LOGO — FIXED PROPER ALIGNMENT ⭐ */}
-<img
-  src={Logo}
-  className={`
-    w-auto transition-all duration-300
-
-    /* ⭐ Normal (not scrolled) — PERFECT POSITION */
-    ${!isScrolled ? "h-[50px] w-[200px] mr-[6px] mt-[-80px]" : ""}
-
-    /* ⭐ Scrolled (white header) — SMALL NEAT */
-    ${isScrolled ? "h-[34px] ml-[20px] mt-[0px]" : ""}
-  `}
-  onClick={() => scrollToSection("home")}
-/>
-
-
-      {/* ⭐ MENU ⭐ */}
-<div
-  className={`
-    flex items-center gap-5 
-    font-semibold text-[14px]
-    ml-[10px]        /* ⭐ Less left margin → moves left */
-    justify-start     /* ⭐ Align left fully */
-    transition-all duration-300
-    ${isScrolled ? "text-[#2C2474]" : "text-white"}
-  `}
->
-
-
-        <button onClick={() => scrollToSection("home")}>Home</button>
-        <button onClick={() => scrollToSection("about")}>About</button>
-        <button onClick={() => scrollToSection("services")}>Services</button>
-        <button onClick={() => scrollToSection("portfolio")}>Portfolio</button>
-        <button onClick={() => scrollToSection("contact")}>Contact</button>
-
-        {/* ⭐ LOGIN BUTTON — SCROLL COLOR CHANGE ⭐ */}
-{!isScrolled && (
-  <button
-    onClick={() => {
-      navigate("/fromdata");
-      window.scrollTo(0, 0);
-    }}
-    className="
-      px-2 py-1.5 rounded-md text-[11px] font-medium border 
-      transition-all duration-300 transform
-      bg-[#FFEC00] text-blue-900 border-[#FFEC00]
-      hover:scale-105 hover:-translate-y-1 hover:shadow-lg
-    "
-  >
-    ATTACH CAR TO COMPANY
-  </button>
-)}
-
-{isScrolled && (
-  <button
-    onClick={() => {
-      navigate("/fromdata");
-      window.scrollTo(0, 0);
-    }}
-    className="
-      px-2 py-1.5 rounded-md text-[11px] font-medium border 
-      transition-all duration-300 transform
-      bg-[#FFEC00] text-blue-900 border-[#FFEC00]
-      hover:scale-105 hover:-translate-y-1 hover:shadow-lg
-    "
-  >
-    ATTACH CAR TO COMPANY
-  </button>
-)}
-{isScrolled && (
-  <button
-    onClick={() => {
-      navigate("/adminlogin");
-      window.scrollTo(0, 0);
-    }}
-    className="
-      px-4 py-1 rounded-md text-[13px] border transition-all duration-300
-      border-[#2C2474] text-[#2C2474]
-    "
-  >
-    Login
-  </button>
-)}
-
-      </div>
-    </div>
-
-    {/* ⭐ HERO TEXT ⭐ */}
-    <div className="absolute top-[200px] left-[55px] max-w-[600px]">
-      <h1 className="text-white font-extrabold leading-tight text-[40px] ">
-        Corporate Commute,
-        <span className="block text-[#2F1C84]">Elevated.</span>
-      </h1>
-
-      <p className="text-black text-[16px] mt-4  max-w-[360px]">
-        Implies a premium, superior 
-        <pre>service level for professionals.</pre>
-      </p>
-    </div>
-  </div>
-</section>
-
-
-
-
-
-
-
-</div>
-);
-
-}
+export default Header;

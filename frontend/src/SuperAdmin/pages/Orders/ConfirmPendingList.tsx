@@ -20,6 +20,8 @@ interface ApiItem {
   paymentMode?: string;
   orderDate?: string;
   pickupDate?: string;
+  customer_name?: string;
+  customer_mobile?: string;
 }
 
 const formatToCustom = (dateString: string) => {
@@ -90,9 +92,9 @@ const [cancelLoading, setCancelLoading] = useState(false);
             orderDate: formatToCustom(booking.createdAt),
            // pickupDate: formatToCustom(booking.bookingDate),
            pickupDate: formatToCustom(`${booking.bookingDate.split("T")[0]}T${booking.bookingTime}`),
-            userName: user?.username || "-",
+            userName: user?.username || booking.customer_name || "-",
             companyName,
-            emailAddress: user?.email || "-",
+            emailAddress: user?.email || booking.customer_mobile || "-",
           };
         } catch {
           return {
@@ -101,9 +103,9 @@ const [cancelLoading, setCancelLoading] = useState(false);
            // pickupDate: formatToCustom(booking.bookingDate),
            pickupDate: formatToCustom(`${booking.bookingDate.split("T")[0]}T${booking.bookingTime}`),
 
-            userName: "-",
+            userName: booking.customer_name || "-",
             companyName: "-",
-            emailAddress: "-",
+            emailAddress: booking.customer_mobile || "-",
           };
         }
       })

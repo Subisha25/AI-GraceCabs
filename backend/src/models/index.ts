@@ -31,12 +31,16 @@ import { OnCallInvoice } from './onCallInvoice';
 import { OnCallInvoiceItems } from './onCallInvoiceItems';
 import { MonthlyInvoice } from './monthlyInvoice';
 import { MonthlyInvoiceItems } from './monthlyInvoiceItems';
+import { FleetOperator } from './fleetOperator';
+import { OrganizationPackage } from './organizationPackage';
+import { BookingPassenger } from './bookingPassenger';
+
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ alter: true });
-  //  await sequelize.sync();
-    console.log('Database connected and tables synced.');
+    // Disable auto-sync to rely on manual DDL scripts
+    // await sequelize.sync();
+    console.log('Database connected.');
   } catch (error) {
     console.error('DB connection error:', error);
   }
@@ -45,5 +49,5 @@ const connectDB = async () => {
 export { sequelize, connectDB, Employee, Company, Drivers,Vehicle,Vendor,User, Booking, Invoice, EmailConfiguration,
   VehicleType, Tax, Pickuparea, Pickupcity, VehicleMaster,OTP,PaymentMode,Payment,orderSummery,Package,PackageData,Configuration,
   ClosePending, BookingSequence, PaymentSequence, InvoiceSequence, ShortLink, MonthlyBookingSequence, MapCount, OnCallInvoice,
-  OnCallInvoiceItems, MonthlyInvoice, MonthlyInvoiceItems
+  OnCallInvoiceItems, MonthlyInvoice, MonthlyInvoiceItems, FleetOperator, OrganizationPackage, BookingPassenger
 };

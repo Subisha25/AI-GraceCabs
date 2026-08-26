@@ -158,8 +158,23 @@ const EditClosePendingOrder: React.FC = () => {
     const fetchCarTypes = async () => {
       setLoadingCars(true);
       try {
-        const res = await axiosInstance.get<{ data: VehicleType[] }>("/vehicleType/getAllVehicleType");
-        setCarTypes(Array.isArray(res.data.data) ? res.data.data : []);
+        const res = await axiosInstance.get<{ data: any[] }>("/vehicles");
+        if (res.data && Array.isArray(res.data.data)) {
+          const seen = new Set();
+          const mapped: VehicleType[] = [];
+          res.data.data.forEach((item) => {
+            if (!seen.has(item.vehicle_type)) {
+              seen.add(item.vehicle_type);
+              mapped.push({
+                vehicleTypeId: item.id,
+                vehicleType: item.vehicle_type
+              });
+            }
+          });
+          setCarTypes(mapped);
+        } else {
+          setCarTypes([]);
+        }
       } catch {
         setCarTypes([]);
       } finally {

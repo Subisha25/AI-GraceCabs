@@ -1278,13 +1278,30 @@ if (activeEntryIndex.current >= entries.length) {
       try {
         setGlobalLoading(true);
         const [cRes, vRes, dRes] = await Promise.all([
-          axiosInstance.get("/company/getAllCompany", { params: { status: 0 } }),
-          axiosInstance.get("/vehicleType/getAllVehicleType", { params: { status: 0 } }),
-          axiosInstance.get("/driver/getAllDrivers"),
+          axiosInstance.get("/organizations"),
+          axiosInstance.get("/vehicles"),
+          axiosInstance.get("/drivers"),
         ]);
-        setCompanies((cRes.data?.data || []).map((c: Company) => ({ value: c.companyId, label: c.companyName })));
-        setVehicleTypes((vRes.data?.data || []).filter((x: VehicleType) => !x.isDeleted).map((v: VehicleType) => ({ value: v.vehicleTypeId, label: v.vehicleType })));
-        setDrivers((dRes.data?.drivers || []).map((d: Driver) => ({ value: d.driverName, label: d.driverName })));
+
+        const rawCompanies = cRes.data?.data || [];
+        setCompanies(rawCompanies.map((c: any) => ({ value: c.id, label: c.name })));
+
+        const rawVehicles = vRes.data?.data || [];
+        const seen = new Set();
+        const mappedVehicles: any[] = [];
+        rawVehicles.forEach((item: any) => {
+          if (!seen.has(item.vehicle_type)) {
+            seen.add(item.vehicle_type);
+            mappedVehicles.push({
+              value: item.id,
+              label: item.vehicle_type
+            });
+          }
+        });
+        setVehicleTypes(mappedVehicles);
+
+        const rawDrivers = dRes.data?.data || [];
+        setDrivers(rawDrivers.map((d: any) => ({ value: d.name, label: d.name })));
       } catch (e: any) {
         showToast(e?.response?.data?.message || "Failed to load data", "error");
       } finally { setGlobalLoading(false); }

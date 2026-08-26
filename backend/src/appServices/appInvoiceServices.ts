@@ -16,12 +16,12 @@ import { ORDER, USERS } from "../utils/costants";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
-const BASE_URL = process.env.API_BASE_URL || "https://gracecabs.com";
+const BASE_URL = process.env.API_BASE_URL || "https://localhost:3000";
 const { ROLES } = USERS;
 const logoPath = path.join(__dirname, "..", "images", "logo.png");
 const logoBase64 = fs.readFileSync(logoPath, "base64");
 //const logoSrc = `data:image/jpeg;base64,${logoBase64}`;
-    const logoSrc = "https://gracecabs.com/images/logo.png";
+    const logoSrc = "https://localhost:3000/images/logo.png";
 
 // Interface for line items in invoice
 interface InvoiceLineItem {
@@ -133,7 +133,7 @@ const numberToWords = (num: number): string => {
 };
 // Generate HTML with dynamic line item
 export const generateInvoiceHTML = (data: InvoiceData): string => {
-  //  const logoSrc = "https://gracecabs.com/images/logo.png";
+  //  const logoSrc = "https://localhost:3000/images/logo.png";
 
   const lineItemsHTML = data.lineItems.map(item => {
     let rowClass = '';
@@ -169,7 +169,7 @@ export const generateInvoiceHTML = (data: InvoiceData): string => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grace Cabs Private Limited</title>
+    <title>New Local AI Mobility Platform Private Limited</title>
     <style>
         * {
             margin: 0;
@@ -461,7 +461,7 @@ export const generateInvoiceHTML = (data: InvoiceData): string => {
         <!-- Header -->
        <div class="header">
     <div class="logo-section">
-    <img src="${logoSrc}" alt="Grace Cabs" class="logo-img" />
+    <img src="${logoSrc}" alt="New Local AI Mobility Platform" class="logo-img" />
     </div>
             <div class="invoice-info">
                 <div><strong>Invoice Number:</strong> ${data.invoiceNumber}</div>
@@ -609,11 +609,11 @@ ${data.managerEmail ? `
         <div class="footer-info">
             <div class="footer-row">
                 <span class="footer-label">Regd.Office:</span>
-                <span>Grace Cabs  Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</span>
+                <span>New Local AI Mobility Platform  Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</span>
             </div>
             <div class="footer-row">
                 <span class="footer-label">Website:</span>
-                <span>gracecabs.com</span>
+                <span>localhost:3000</span>
             </div>
             <div class="footer-row">
                 <span class="footer-label">GSTIN:</span>

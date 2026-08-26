@@ -94,29 +94,29 @@ const TravelHeader: React.FC = () => {
     <>
       <header className="w-full border-b border-gray-200">
         {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-center py-2 px-3 sm:px-5 bg-gray-50 text-xs sm:text-sm border-t-4 border-gray-700 gap-2 sm:gap-0">
+        <div className="flex flex-col sm:flex-row justify-between items-center py-2 px-3 sm:px-5 bg-gray-50 text-xs sm:text-sm border-t-4 border-[#1B4F8A] gap-2 sm:gap-0">
           {/* Contact Info - Hidden on mobile, shown on tablet+ */}
           <div className="hidden md:flex space-x-3 lg:space-x-5 text-gray-700 text-xs lg:text-sm">
             <span className="flex items-center">
               <span className="mr-1">📞</span>
-              <span className="hidden lg:inline">+91-98417 22675</span>
-              <span className="lg:hidden">+91-98417...</span>
+              <span className="hidden lg:inline">+1 800-SWIFTRIDE</span>
+              <span className="lg:hidden">+1 800-SWIFTRIDE</span>
             </span>
             <span className="flex items-center">
               <span className="mr-1">✉️</span>
-              <span className="hidden lg:inline">traveledesk@gracecabs.com</span>
+              <span className="hidden lg:inline">support@swiftride.app</span>
               <span className="lg:hidden">Contact</span>
             </span>
           </div>
 
           {/* Action Buttons */}
           <div className="flex space-x-1 sm:space-x-1.5 w-full sm:w-auto justify-end">
-            <button className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-white text-xs sm:text-sm font-medium rounded-sm bg-green-500 hover:bg-green-600 transition duration-150">
+            <button className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-white text-xs sm:text-sm font-medium rounded-sm bg-[#1B4F8A] hover:bg-[#12376B] transition duration-150">
               Welcome
             </button>
             <button
               onClick={() => navigate("/users/myaccount")}
-              className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-white text-xs sm:text-sm font-medium rounded-sm bg-blue-500 hover:bg-blue-600 transition duration-150"
+              className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-white text-xs sm:text-sm font-medium rounded-sm bg-[#F59E0B] hover:bg-amber-600 transition duration-150"
             >
               My Account
             </button>
@@ -133,13 +133,13 @@ const TravelHeader: React.FC = () => {
         <nav className="flex justify-between items-center py-3 px-3 sm:px-5">
           {/* Logo */}
           <div className="flex items-center">
-            <img
-              src="/images/favicon1.jpeg"
-              alt="Driver logo"
-              className="h-8 w-8 sm:h-10 sm:w-10 lg:h-11 lg:w-12 rounded-full mr-2"
-            />
-            <span className="text-lg sm:text-2xl lg:text-3xl font-medium text-gray-800 tracking-wide">
-              GRACE<span className="text-yellow-500 font-bold">C</span>ABS
+            <div className="w-8 h-8 rounded-xl bg-[#1B4F8A] flex items-center justify-center shadow mr-2">
+              <svg className="w-4.5 h-4.5 text-[#F59E0B]" fill="currentColor" viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}>
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+              </svg>
+            </div>
+            <span className="text-lg sm:text-2xl lg:text-3xl font-extrabold text-[#1B4F8A] tracking-wide">
+              Swift<span className="text-[#F59E0B]">Ride</span>
             </span>
           </div>
 

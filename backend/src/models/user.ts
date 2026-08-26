@@ -14,6 +14,7 @@ import {
 
 import { Booking } from './booking';
 import { Company } from './company';
+import { FleetOperator } from './fleetOperator';
 
 @DefaultScope(() => ({
   where: {
@@ -26,6 +27,16 @@ import { Company } from './company';
   updatedAt: false,
 })
 export class User extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
   @PrimaryKey
   @Column({
     type: DataType.UUID,

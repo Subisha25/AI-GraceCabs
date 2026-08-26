@@ -35,6 +35,11 @@ import { MapCount } from '../models/mapCount';
 import { OnCallInvoice } from '../models/onCallInvoice';
 import { OnCallInvoiceItems } from '../models/onCallInvoiceItems';
 
+import { FleetOperator } from '../models/fleetOperator';
+import { OrganizationPackage } from '../models/organizationPackage';
+import { BookingPassenger } from '../models/bookingPassenger';
+import { Schedule } from '../models/schedule';
+
 const sequelize = new Sequelize({
   dialect: config.database.dialect as Dialect,
   host: config.database.host,
@@ -44,7 +49,8 @@ const sequelize = new Sequelize({
   models: [Employee, Company, Drivers, Vehicle, Vendor, User, Booking, Invoice, Partner,
     Payment,VehicleType,OTP, Tax, Pickuparea,Pickupcity,VehicleMaster,PaymentMode,orderSummery,Package,
     PackageData,Configuration,ClosePending,EmailConfiguration,BookingSequence,PaymentSequence, InvoiceSequence,
-     MonthlyInvoice, MonthlyInvoiceItems, MonthlyBookingSequence,MapCount,OnCallInvoice,OnCallInvoiceItems],
+     MonthlyInvoice, MonthlyInvoiceItems, MonthlyBookingSequence,MapCount,OnCallInvoice,OnCallInvoiceItems,
+     FleetOperator, OrganizationPackage, BookingPassenger, Schedule],
   logging: false,
 });
 

@@ -194,7 +194,7 @@
 //       </main>
 
 //       <footer className="mt-10 text-xs text-gray-500 pt-2 text-center">
-//         2025 © GraceCabs.in. Powered by Celexsa
+//         2025 © New Local AI Mobility Platform.in. Powered by Celexsa
 //       </footer>
 //     </PageLayout>
 //   );
@@ -530,7 +530,7 @@ const ViewPaymentList: React.FC = () => {
       </main>
 
     <footer className="mt-auto text-xs text-gray-500 pt-2 text-center">
-  © {new Date().getFullYear()} GraceCabs.in. Powered by Celexsa
+  © {new Date().getFullYear()} New Local AI Mobility Platform.in. Powered by Celexsa
 </footer>
 
     </PageLayout>

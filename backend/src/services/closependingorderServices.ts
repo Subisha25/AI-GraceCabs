@@ -7,7 +7,7 @@ import { PaymentMode } from '../models/paymentmode';
 import { Booking } from '../models/booking';
 import { USERS } from "../utils/costants";
 import { ORDER } from "../utils/costants";
-import { Company, Drivers, User, Vehicle, VehicleMaster, VehicleType } from '../models';
+import { Company, Drivers, User, Vehicle, VehicleMaster, VehicleType, OrganizationPackage } from '../models';
 import { Op } from 'sequelize';
 const { ROLES } = USERS;
 import { sendEmailFromTemplate } from "../services/emailConfServices";
@@ -379,8 +379,8 @@ export function buildEmailInvoiceBlockFromRaw(completeBooking: any, cp: any, inv
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #333;">
     <tr>
       <td style="width: 50%; vertical-align: top;">
-        <img src="https://gracecabs.com/images/logo.png"
-             alt="Grace Cabs"
+        <img src="${config.baseurl.apibaseurl}/uploads/companyLogo/logo.png"
+             alt="${config.appName}"
              style="max-height: 70px; display: block;" />
       </td>
       <td style="width: 50%; vertical-align: top; text-align: right; font-size: 12px;">
@@ -649,8 +649,8 @@ export function buildEmailInvoiceBlockFromRaw(completeBooking: any, cp: any, inv
 
       <!-- Footer Information -->
       <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; line-height: 1.4; color: #666;">
-        <div style="margin-bottom: 2px;"><strong>Regd.Office:</strong> Grace Cabs Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</div>
-        <div style="margin-bottom: 2px;"><strong>Website:</strong> gracecabs.com</div>
+        <div style="margin-bottom: 2px;"><strong>Regd.Office:</strong> ${config.appName}, Development Office</div>
+        <div style="margin-bottom: 2px;"><strong>Website:</strong> ${config.baseurl.webbaseurl}</div>
         <div style="margin-bottom: 2px;"><strong>GSTIN:</strong> 33AAMCG2518C1Z0</div>
         <div style="margin-bottom: 2px;"><strong>PAN No.:</strong> AAMCG2518C</div>
         <div style="margin-bottom: 2px;"><strong>SAC:</strong> 996609</div>
@@ -1167,7 +1167,7 @@ export const createClosePending = async (req: any, res: Response) => {
 
           await sendEmailFromTemplate(orderConfirmConf.emailCode, {
             UserName: invoiceWithDetails.user.username ?? "",
-            UserEmail: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+            UserEmail: config.sendmail.smtp_email || "admin@localhost",
             OrderNumber: booking.bookingCode ?? "",
             // InvoiceTemple: `
             //     Amount: ${invoiceWithDetails.invoiceAmount}<br/>
@@ -1520,7 +1520,7 @@ const toNum = (v: any) => {
 //         await sendEmailFromTemplate(
 //           orderConfirmConf.emailCode,
 //           {
-//             to: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+//             to: "admin@local.platform,traveldesk@localhost:3000",
 //             OrderNumber: (result.inv as any).invoiceNumber,
 //             BookingNumber: (result.createdMonthly as any).monthlyInvoiceId,
 //             InvoiceTemple: "",
@@ -1571,6 +1571,11 @@ export const createMonthlyInvoice = async (req: Request, res: Response) => {
     const company = await Company.findOne({ where: { companyId } });
     if (!company) return res.status(404).json({ success: false, message: "Company not found" });
 
+    // Fetch custom contract package overrides
+    const contract = await OrganizationPackage.findOne({
+      where: { companyId, status: 'active' }
+    });
+
     // Normalize input routes: if routes is array, use it; otherwise fallback to single route object from body
     let rawRoutes: any[] = [];
     if (Array.isArray(routes) && routes.length > 0) {
@@ -1597,17 +1602,28 @@ export const createMonthlyInvoice = async (req: Request, res: Response) => {
     for (const rItem of rawRoutes) {
       const normalizedPkgDetails = normalizePackageDetails(rItem.packageDetails, rItem);
 
-      const pkgAmount = toNum(rItem.packageAmount || normalizedPkgDetails.amount);
-      const extraKmAmt = toNum(rItem.extraKmAmount);
-      const extraDaysAmt = toNum(rItem.extraDaysAmount);
-      const extraHrsAmt = toNum(rItem.extraHrsAmount);
-      const extraHourRateVal = toNum(rItem.extraHourRate || normalizedPkgDetails.extraHourRate);
-      const disc = toNum(rItem.discount);
-      const adv = toNum(rItem.advance);
+      const customBase = contract && contract.customBaseAmount !== null && contract.customBaseAmount !== undefined
+        ? contract.customBaseAmount
+        : null;
+      const customKmRate = contract && contract.customExtraKmRate !== null && contract.customExtraKmRate !== undefined
+        ? contract.customExtraKmRate
+        : null;
+      const customHourRate = contract && contract.customExtraHourRate !== null && contract.customExtraHourRate !== undefined
+        ? contract.customExtraHourRate
+        : null;
 
+      const pkgAmount = customBase !== null ? customBase : toNum(rItem.packageAmount || normalizedPkgDetails.amount);
       const extraKmCount = toNum(rItem.extraKm);
       const extraDaysCount = toNum(rItem.extraDays);
       const extraHrsCount = toNum(rItem.extraHrs);
+
+      const extraKmAmt = customKmRate !== null ? (extraKmCount * customKmRate) : toNum(rItem.extraKmAmount);
+      const extraDaysAmt = toNum(rItem.extraDaysAmount);
+      const extraHrsAmt = customHourRate !== null ? (extraHrsCount * customHourRate) : toNum(rItem.extraHrsAmount);
+
+      const extraHourRateVal = customHourRate !== null ? customHourRate : toNum(rItem.extraHourRate || normalizedPkgDetails.extraHourRate);
+      const disc = toNum(rItem.discount);
+      const adv = toNum(rItem.advance);
 
       const extraChargesArr = Array.isArray(rItem.extraCharges)
         ? rItem.extraCharges.map((x: any) => ({
@@ -1779,7 +1795,7 @@ export const createMonthlyInvoice = async (req: Request, res: Response) => {
         await sendEmailFromTemplate(
           orderConfirmConf.emailCode,
           {
-            to: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+            to: config.sendmail.smtp_email || "admin@localhost",
             OrderNumber: (result.inv as any).invoiceNumber,
             BookingNumber: (result.createdMonthly as any).monthlyInvoiceId,
             InvoiceTemple: "",
@@ -2086,7 +2102,7 @@ export const resendMonthlyInvoice = async (req: Request, res: Response) => {
       await sendEmailFromTemplate(
         orderConfirmConf.emailCode,
         {
-          to: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+          to: config.sendmail.smtp_email || "admin@localhost",
           OrderNumber: (createdMonthly as any).invoiceNumber,
           BookingNumber: (createdMonthly as any).monthlyInvoiceId,
           InvoiceTemple: "",
@@ -2309,7 +2325,7 @@ export const resendMonthlyInvoice = async (req: Request, res: Response) => {
 //   await sendEmailFromTemplate(
 //     orderConfirmConf.emailCode,
 //     {
-//       to: "robertjayakumar@gmail.com,traveldesk@gracecabs.com",
+//       to: "robertjayakumar@gmail.com,traveldesk@localhost:3000",
 //       OrderNumber: result.inv.invoiceNumber,
 //       BookingNumber: result.createdMonthly.monthlyInvoiceId,
 //       InvoiceTemple: "", // optional (PDF is main)
@@ -3612,7 +3628,7 @@ export const editMonthlyInvoice = async (req: Request, res: Response) => {
         await sendEmailFromTemplate(
           orderConfirmConf.emailCode,
           {
-            to: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+            to: config.sendmail.smtp_email || "admin@localhost",
             OrderNumber: existingMonthly.monthlyBookingCode,
             BookingNumber: monthlyInvoiceId,
             InvoiceTemple: "",

@@ -41,6 +41,8 @@ import redirectRoute from './routes/redirectRoute';
 import onCallRoutes from './routes/onCallRoutes';
 
 import downloadPdf from './routes/downloadPdf';
+import aiRoutes from './routes/aiRoutes';
+import scheduleRoutes from './routes/scheduleRoutes';
 
 import config from "../src/config/config"; 
 
@@ -72,18 +74,15 @@ app.use('/uploads', express.static(uploadsFolder));
  const vehiclePath = path.join(__dirname, '..', 'uploads', 'vehicleImg');
 console.log("Vehicle Static Path:", vehiclePath); // <-
 app.use(cors({
-//  origin: "http://93.127.139.232:3000",
-  //  origin: BASE_URL,
-  
-   origin:"*",
+  origin: config.baseurl.webbaseurl,
   methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.use('/uploads/vehicleImg', express.static(path.join(__dirname, '..', '..', 'uploads', 'vehicleImg')));
-app.use('/uploads/signature', express.static(path.join(__dirname,  '..', '..', 'uploads', 'signature')));
-app.use('/uploads/companyLogo', express.static(path.join(__dirname,   '..', '..','uploads', 'companyLogo'))); 
+app.use('/uploads/vehicleImg', express.static(path.join(__dirname, '..', 'uploads', 'vehicleImg')));
+app.use('/uploads/signature', express.static(path.join(__dirname,  '..', 'uploads', 'signature')));
+app.use('/uploads/companyLogo', express.static(path.join(__dirname,   '..', 'uploads', 'companyLogo'))); 
 
 app.use('/api/auth', authRoutes);
 app.use('/api/emp', empRoutes);
@@ -172,6 +171,8 @@ app.use('/api/emailConfRoutes',emailConfRoutes );
 
 app.use('/api/paymentRoutes',paymentRoutes);
 app.use('/api/oncallinvoice',onCallRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/schedules', scheduleRoutes);
 // Short redirect route for SMS short codes
 
 export default app;

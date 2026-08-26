@@ -178,7 +178,7 @@ const UserViewPaymentList: React.FC = () => {
       </main>
 
  <footer className="mt-auto text-xs text-gray-500 pt-2 text-center">
-  © {new Date().getFullYear()} GraceCabs.in. Powered by Celexsa
+  © {new Date().getFullYear()} New Local AI Mobility Platform.in. Powered by Celexsa
 </footer>
 
     </PageLayout>

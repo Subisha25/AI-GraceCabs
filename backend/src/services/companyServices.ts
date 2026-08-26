@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Company, Employee, Invoice, Tax, Vendor, User, Booking } from '../models';
+import { Company, Employee, Invoice, Tax, Vendor, User, Booking, OrganizationPackage, Package } from '../models';
 import { USERS } from "../utils/costants";
 const { ROLES } = USERS;
 import { Op } from 'sequelize';
@@ -34,19 +34,21 @@ export const getCompanyBySeoUrl = async (req: Request, res: Response) => {
 
 export const getAllCompany = async (req: Request, res: Response) => {
   try {
-
     const { status } = req.query;
+    const operatorId = (req as any).operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a';
     let company;
     if (status === '1') {
       company = await Company.unscoped().findAll({
         where: {
           isDeleted: true,
+          operatorId,
         },
       });
     } else {
       company = await Company.findAll({
         where: {
           isDeleted: false,
+          operatorId,
         },
       });
     }
@@ -487,5 +489,61 @@ export const restoreCompany = async (req: any, res: Response) => {
       message: 'Error restoring company',
       error: error.message,
     });
+  }
+};
+
+export const assignPackage = async (req: Request, res: Response) => {
+  try {
+    const { companyId, packageId, customBaseAmount, customExtraKmRate, customExtraHourRate, effectiveDate, expiryDate } = req.body;
+    const operatorId = (req as any).operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a';
+
+    if (!companyId || !packageId) {
+      return res.status(400).json({ success: false, message: 'companyId and packageId are required' });
+    }
+
+    let assignment = await OrganizationPackage.findOne({ where: { companyId } });
+    if (assignment) {
+      await assignment.update({
+        packageId,
+        customBaseAmount,
+        customExtraKmRate,
+        customExtraHourRate,
+        effectiveDate,
+        expiryDate,
+        status: 'active',
+      });
+    } else {
+      assignment = await OrganizationPackage.create({
+        operatorId,
+        companyId,
+        packageId,
+        customBaseAmount,
+        customExtraKmRate,
+        customExtraHourRate,
+        effectiveDate,
+        expiryDate,
+        status: 'active',
+      });
+    }
+
+    return res.status(200).json({ success: true, message: 'Package contract assigned successfully', data: assignment });
+  } catch (error: any) {
+    console.error('Error assigning package:', error);
+    return res.status(500).json({ success: false, message: 'Error assigning package', error: error.message });
+  }
+};
+
+export const getPackageAssignment = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    const assignments = await OrganizationPackage.findAll({
+      where: { companyId },
+      include: [{ model: Package, required: false }]
+    });
+
+    return res.status(200).json({ success: true, data: assignments });
+  } catch (error: any) {
+    console.error('Error getting package assignments:', error);
+    return res.status(500).json({ success: false, message: 'Error getting package assignments', error: error.message });
   }
 };

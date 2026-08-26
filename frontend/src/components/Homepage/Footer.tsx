@@ -1,432 +1,104 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-import IconPlay from "../components/assets/Footer/Footer/download-cropped.svg";
-import Logo from "../../assets/logo.png";
-import IconFacebook from "../../assets/Footer/facebook.png";
-import IconInsta from "../../assets/Footer/insta.png";
-import IconLinkedIn from "../../assets/Footer/in.png";
-import IconPhone from "../../assets/Footer/phone.png";
-import IconMail from "../../assets/Footer/mail.png";
-import FooterBg from "../../assets/Footer/footer.png";
-import FooterMobileBg from "../../assets/Footer/Maskgroup.png";
-import PlayStoreIcon from "../../assets/Footer/playstore.png";  // example file
-import AppStoreIcon from "../../assets/Footer/appstore.png";  // example file
-
-import { Link } from "react-router-dom";
+const PLATFORM_NAME = 'SwiftRide';
+const SUPPORT_EMAIL = 'support@swiftride.app';
+const YEAR = new Date().getFullYear();
 
 export default function Footer() {
   return (
-    <div className="w-full px-3 sm:px-4 md:px-8 lg:px-1 -mt-5 pb-4 py-5">
+    <footer className="w-full bg-gradient-to-br from-[#0d2544] to-[#1B4F8A] text-white">
+      {/* Top section */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 
-      {/* MAIN FOOTER CARD */}
-     <div
-  className=" footer-desktop-bg w-full text-white bg-no-repeat bg-top pt-10 sm:pt-12 md:pt-12 lg:pt-16 pb-5 md:rounded-3xl bg-[length:100%_100%] /* <-- WHITE SPACE FIX */ "
-  style={{ backgroundImage: `url(${FooterMobileBg})` }}
->
-
-        <style>
-          {`
-            @media (min-width: 768px) {
-              .footer-desktop-bg {
-                background-image: url(${FooterBg}) !important; /* Desktop background */
-              }
-            }
-          `}
-        </style>
-
-        {/* FOOTER CONTENT WRAPPER */}
-        <div className="px-6 sm:px-10 lg:px-12 w-full mx-auto max-w-[1200px] md:px-1.5">
-
-          {/* TOP ROW */}
-          <div className="
-            flex flex-col md:flex-row 
-            justify-between 
-            items-center md:items-start lg:items-center 
-            gap-6
-          ">
-            <img
-              src={Logo}
-              className="
-    object-contain
-
-    /* MOBILE */
-    h-8              /* smaller height */
-    w-auto
-    mr-0             /* fully left */
-    -mt-6            /* move up */
-    self-start
-
-    /* TABLET */
-    sm:h-10
-    sm:-mt-8
-
-    /* 🖥 DESKTOP */
-    sm:h-14
-    md:h-15 md:w-39 md:pr-6 md:pb-[39px]
-    lg:h-35 lg:w-75 lg:-mt-20 lg:-ml-24 
-  "
-            />
-
-{/* Heading */}
-            <div className="flex flex-col items-center md:items-start lg:items-start lg:-mt-19 lg:ml-28">
-              <h2
-                className="
-                  text-xl sm:text-2xl
-                  md:text-[22px]    
-                  lg:text-4xl 
-                  font-bold leading-tight 
-                  text-center md:text-left
-                  md:mr-3
-                "
-              >
-                Creating extraordinary <br /> travel experiences.
-              </h2>
+          {/* Brand column */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[#F59E0B]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                </svg>
+              </div>
+              <span className="text-2xl font-extrabold">Swift<span className="text-[#F59E0B]">Ride</span></span>
             </div>
-                     <div>
-              <iframe id='Iframe1' src='https://dunsregistered.dnb.com/SealAuthentication.aspx?Cid=1' width='114px' height='97px' ></iframe>
-           
-            </div>
-
-            {/* Social Icons */}
-          <div className="flex flex-col items-center md:items-start lg:items-start gap-3 -mt-1 lg:-mt-15 lg:ml-12">
-<p className="
-  text-yellow-300 font-bold mb-2 text-base 
-  md:ml-5 
-  tab-connect-align
-">
-  CONNECT WITH US
-</p>
-
-<style>
-{`
-  @media (min-width: 768px) and (max-width: 1020px) {
-    .tab-connect-align {
-      margin-left: 0px !important;   /* Remove md:ml-5 */
-      align-self: flex-start !important; 
-      text-align: left !important;
-    }
-
-    .tab-icons-align {
-      margin-left: 0px !important;   /* Icons straight left */
-      justify-content: flex-start !important;
-    }
-  }
-`}
-</style>
-
-  <div className="flex items-center gap-5 sm:gap-6 mt-1 lg:ml-6">
-
-    {/* Facebook */}
-    <a
-      href="https://www.facebook.com/profile.php?id=61581875616589"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="transform transition-transform duration-300 hover:scale-110 hover:rotate-3"
-    >
-      <img
-        src={IconFacebook}
-        className="w-6 sm:w-7 md:w-7 lg:w-9"
-      />
-    </a>
-
-    {/* Instagram */}
-    <a
-      href="https://www.instagram.com/gracecabspvt/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="transform transition-transform duration-300 hover:scale-110 hover:-rotate-3"
-    >
-      <img
-        src={IconInsta}
-        className="w-6 sm:w-7 md:w-7 lg:w-9"
-      />
-    </a>
-
-    {/* LinkedIn */}
-    <a
-      href="https://www.linkedin.com/in/robert-jayakumar-b093b57b"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="transform transition-transform duration-300 hover:scale-110 hover:rotate-1"
-    >
-      <img
-        src={IconLinkedIn}
-        className="w-6 sm:w-7 md:w-7 lg:w-9"
-      />
-    </a>
-
-  </div>
-</div>
-
+            <p className="text-white/60 text-sm leading-relaxed max-w-sm">
+              Fast, professional and reliable transport booking for individuals, corporates, schools and organisations.
+            </p>
+            <p className="text-white/50 text-xs">
+              Your Ride. Your Time. Your Journey.
+            </p>
           </div>
-          {/* MOBILE ONLY LINE */}
-          <div className="block md:hidden w-full h-[1px] bg-white/30 mt-5 mb-2"></div>
 
-          {/* White Line */}
-          <div className="hidden lg:block w-[calc(90%-120px)] lg:ml-[310px] h-[2px] bg-white/30"></div>
-        </div>
+          {/* Quick Links */}
+          <div className="space-y-3">
+            <p className="text-[#F59E0B] font-bold text-sm uppercase tracking-widest">Quick Links</p>
+            <div className="space-y-2">
+              {[
+                { label: 'Book a Cab', href: '/customer/book' },
+                { label: 'Track Booking', href: '/track-booking' },
+                { label: 'Login', href: '/login' },
+                { label: 'Register', href: '/register' },
+                { label: 'Terms & Conditions', href: '/TermsAndConditions' },
+                { label: 'Privacy Policy', href: '/PrivacyPolicy' },
+              ].map((link) => (
+                <div key={link.label}>
+                  <Link
+                    to={link.href}
+                    className="text-white/70 hover:text-[#F59E0B] text-sm transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <>
-  {/* ⭐ TAB ONLY STYLES (768–1020px) ⭐ */}
-  <style>
-    {`
-      @media (min-width: 768px) and (max-width: 1020px) {
-        .tab-small-text { font-size: 13px !important; }
-        .tab-small-heading { font-size: 14px !important; }
-        .tab-tight { line-height: 1.2 !important; }
-        .tab-w-85 { width: 85% !important; }
-      }
-    `}
-  </style>
-
-  {/* MIDDLE SECTION */}
-  <div
-    className="
-      grid grid-cols-1 
-      md:grid-cols-3      /* ⭐ Always 3 columns from tablet & above */
-      gap-6 
-      px-4 sm:px-6 lg:px-10
-      mt-5
-      text-[14px]
-    "
-  >
-
-    {/* HEAD OFFICE */}
-    <div className="md:text-left text-center flex flex-col items-center md:items-start">
-      <p className="text-yellow-300 font-bold mb-1 text-base tab-small-heading">
-        HEAD OFFICE
-      </p>
-
-      <p className="opacity-95 leading-relaxed tab-tight tab-small-text tab-w-85">
-        7/621, Nesamani Nagar Ext Road, <br />
-        Perumbakam, Sholinganallur, <br />
-        Chennai 600100, Tamil Nadu
-      </p>
-    </div>
-
-    {/* READY TO QUERY */}
-    <div className="text-center md:text-left flex flex-col items-center md:items-start">
-      <p className="text-yellow-300 font-bold mb-1 text-base tab-small-heading">
-        READY TO QUERY
-      </p>
-
-      {/* MOBILE VIEW */}
-      <div className="md:hidden ">
-        <div className="flex items-start gap-2">
-          <img src={IconPhone} className="w-6 h-6 mt-1" />
-          <p className="text-sm opacity-95">
-            +91 98417 22675 / +91 90032 41571
-          </p>
-        </div>
-        <div className="flex items-start gap-2 -mt-1">
-          <img src={IconPhone} className="w-6 h-6 opacity-0" />
-          <p className="text-sm opacity-95">+91 89250 72675</p>
-        </div>
-      </div>
-
-      {/* TABLET + LAPTOP */}
-<div className="hidden lg:flex items-center gap-2 mb-1">
-        <img src={IconPhone} className="w-6 cursor-pointer" />
-        <p className="opacity-95 whitespace-nowrap tab-small-text">
-          +91 98417 22675 / +91 90032 41571 / +91 89250 72675
-        </p>
-      </div>
-      {/* TABLET  */}
-<div className="hidden md:flex mb-1 tablet-query-wrapper lg:hidden">
-
-  {/* Line 1 — Icon + First Number */}
-  <div className="tablet-line">
-    <img src={IconPhone} className="w-6 cursor-pointer" />
-    <p className="opacity-95 tab-small-text">
-      +91 98417 22675/+91 90032 41571
-
-    </p>
-  </div>
-
- 
-
-  {/* Line 3 — Number only */}
-  <div className="tablet-line">
-    <img src={IconPhone} className="w-6 hidden-icon" />
-    <p className="opacity-95 tab-small-text">
-      +91 89250 72675
-    </p>
-  </div>
-
-</div>
-
-<style>
-{`
-  /* ⭐ TABLET ONLY: 768px – 1000px ⭐ */
-  @media (min-width: 768px) and (max-width: 1000px) {
-
-    .tablet-query-wrapper {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 4px !important;
-    }
-
-    .tablet-line {
-      display: flex !important;
-      align-items: center !important;
-      gap: 6px !important;
-      line-height: 1.3 !important;
-      white-space: nowrap !important;
-    }
-
-    .tablet-line .hidden-icon {
-      opacity: 0 !important; /* For alignment */
-    }
-  }
-`}
-</style>
-
-
-      <div className="flex items-center gap-2 mt-1">
-        <img src={IconMail} className="w-6 h-6" />
-        <a
-          href="mailto:traveledesk@gracecabs.com"
-          className="hover:text-yellow-300 transition tab-small-text"
-        >
-          traveledesk@gracecabs.com
-        </a>
-      </div>
-    </div>
-
-   {/* CAB BOOKING APP */}
-<div
-  className="
-    flex flex-col text-center md:text-left 
-    items-center md:items-start 
-    gap-1 w-full 
-    lg:pl-40 
-    md:pl-10
-    cab-app-tab-shift
-  "
->
-  <p className="text-yellow-300 font-bold mb-1 text-base tab-small-heading">
-    CAB BOOKING APP
-  </p>
-
-  {/* ⭐ Google Play Link */}
-  <a
-    href="https://play.google.com/store/apps/details?id=com.gracecabs.cabs"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <img
-      src={PlayStoreIcon}
-      className="
-        w-32 h-12 md:w-32 md:h-12 lg:w-30 lg:h-14
-        object-contain cursor-pointer hover:scale-110 transition
-      "
-    />
-  </a>
-
-  {/* ⭐ Apple App Store Link */}
-  <a
-    href="https://apps.apple.com/in/app/cab-booking-app/id6754595890"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <img
-      src={AppStoreIcon}
-      className="
-        w-32 h-12 md:w-32 md:h-12 lg:w-30 lg:h-14 
-        object-contain cursor-pointer hover:scale-110 transition
-      "
-    />
-  </a>
-</div>
-
-
-
-      <style>
-{`
-  @media (min-width: 768px) and (max-width: 1020px) {
-    .cab-app-tab-shift {
-      padding-left: 40px !important;  /* Right side move */
-    }
-  }
-`}
-</style>
-
-
-  </div>
-</>
-
-
-        {/* BRANCHES + LINKS */}
-        <div className="px-4 sm:px-6 lg:px-12 mt-0 text-[14px]">
-
-          {/* 👉 MOBILE VIEW ONLY */}
-          <div className="md:hidden text-center mt-0">
-
-            <p className="text-yellow-300 font-bold mb-2 text-base">
-              BRANCHES
-            </p>
-
-            <p className="text-sm opacity-90 mb-4">
-              Oragadam &nbsp; | &nbsp; Periyapalayam &nbsp; | &nbsp; Pallikaranai
-            </p>
-            {/* MOBILE VIEW — All in ONE ROW */}
-            {/* <p className="md:hidden text-sm opacity-90 whitespace-nowrap">
-      Oragadam &nbsp; | &nbsp; Periyapalayam &nbsp; | &nbsp; Pallikaranai
-    </p> */}
-            {/* Links — stacked exactly like your design */}
-            <div className="flex flex-col items-center gap-3">
-
-              <div className="flex gap-6">
-                <a href="/TermsAndConditions" className="text-sm hover:text-yellow-300 transition">
-                  Terms & Conditions
-                </a>
-                <a href="/PrivacyPolicy" className="text-sm hover:text-yellow-300 transition">
-                  Privacy Policy
+          {/* Contact */}
+          <div className="space-y-3">
+            <p className="text-[#F59E0B] font-bold text-sm uppercase tracking-widest">Support</p>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2.5">
+                <svg className="w-4 h-4 mt-0.5 text-white/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-white/70 hover:text-[#F59E0B] text-sm transition-colors">
+                  {SUPPORT_EMAIL}
                 </a>
               </div>
-
-              <a href="/CancelReservation" className="text-sm hover:text-yellow-300 transition">
-                Cancel Reservation
-              </a>
-
+              <div className="flex items-start gap-2.5">
+                <svg className="w-4 h-4 mt-0.5 text-white/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-white/70 text-sm">Mon–Sat, 8 AM – 8 PM</span>
+              </div>
             </div>
 
-          </div>
-
-
-          {/* 👉 DESKTOP VIEW ONLY (unchanged) */}
-          <div className="hidden md:flex flex-row justify-between items-center">
-            <div className="
-  md:text-left md:items-start /* DESKTOP/TABLET: normal */
- ">
-              <p className="text-yellow-300 font-bold mb-2 text-base">BRANCHES</p>
-              <p className="text-sm sm:text-base opacity-90">
-                Oragadam | Periyapalayam | Pallikaranai
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 lg:gap-15 lg:mr-75">
-              <a href="/TermsAndConditions" className="text-sm md:text-[15px] hover:text-yellow-300 transition">
-                Terms & Conditions
-              </a>
-              <a href="/PrivacyPolicy" className="text-sm md:text-[15px] hover:text-yellow-300 transition">
-                Privacy Policy
-              </a>
-              <a href="/CancelReservation" className="text-sm md:text-[15px] hover:text-yellow-300 transition">
-                Cancel Reservation
-              </a>
+            {/* Social (neutral — no personal links) */}
+            <div className="flex gap-3 pt-2">
+              {[
+                { href: 'https://www.facebook.com/', label: 'Facebook', icon: <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /> },
+                { href: 'https://www.instagram.com/', label: 'Instagram', icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></> },
+              ].map((s) => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    {s.icon}
+                  </svg>
+                </a>
+              ))}
             </div>
           </div>
         </div>
-
-        <div className="border-t border-white/30 mx-4 sm:mx-6 lg:mx-12 mt-8 mb-4"></div>
-
-{/* COPY RIGHT SECTION */}
-       <div className="text-center text-[12px] sm:text-[14px] opacity-80">
-  © {new Date().getFullYear()} GraceCabs.in. All Rights Reserved.
-</div>
-
       </div>
-    </div>
+
+      {/* Bottom bar */}
+      <div className="border-t border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/40">
+          <span>© {YEAR} {PLATFORM_NAME} Transport Platform. All Rights Reserved.</span>
+          <span>Powered by SwiftRide SaaS</span>
+        </div>
+      </div>
+    </footer>
   );
 }

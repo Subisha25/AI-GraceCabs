@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "SwiftRide",
+  "name": "SwiftRide - Professional Transport",
+  "description": "Fast, professional cab booking for individuals and organisations.",
   "icons": [
     {
       "src": "favicon1.jpeg",
@@ -20,6 +21,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#1B4F8A",
+  "background_color": "#F8FAFF"
 }

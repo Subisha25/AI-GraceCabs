@@ -1,167 +1,131 @@
-
-
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import PageLayout from '../../../../components/PageLayout';
-import InputBox, { getFormStore } from '../../../../components/InputBox';
+import InputBox from '../../../../components/InputBox';
 import CommonButton from '../../../../components/CommonButton';
 import { AlertContainer, showToast } from '../../../../components/AlertBox';
-import { faCar, faIdCard, faUser,faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import { faCar, faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axiosInstance from '../../../../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import VendorList from '../../Vendors/ListVendor';
-
-interface Vendor {
-  vendorId: string;
-  vendorName: string;
-}
-
-interface VehicleModel {
-  vehicleId: string;
-  vehicleName: string;
-}
 
 const AddVehicleMaster: React.FC = () => {
-  const [vendorsList, setVendorsList] = useState<Vendor[]>([]);
-  const [vehicleModels, setVehicleModels] = useState<VehicleModel[]>([]);
+  const [vehicleType, setVehicleType] = useState('');
+  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [seatingCapacity, setSeatingCapacity] = useState('');
+  const [pricePerKm, setPricePerKm] = useState('');
+  const [status, setStatus] = useState('active');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const res = await axiosInstance.get('/vendor/getAllVendors');
-        setVendorsList(res.data.vendors || []);
-      } catch (err) {
-        console.error('Error fetching owners:', err);
-        showToast('Failed to fetch owners.', 'error');
-      }
-    };
-
-    const fetchVehicleModels = async () => {
-      try {
-        const res = await axiosInstance.get('/vehicle/getAllVehicles');
-        setVehicleModels(res.data.vehicles || []);
-      } catch (err) {
-        console.error('Error fetching vehicle models:', err);
-        showToast('Failed to fetch vehicle models.', 'error');
-      }
-    };
-
-    fetchVendors();
-    fetchVehicleModels();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = getFormStore();
-    const { vehicleNumber, vehicleModel, vendors } = form;
 
-    if (!vehicleNumber?.trim() || !vehicleModel || !vendors) {
+    if (!vehicleType || !vehicleNumber.trim() || !seatingCapacity || !pricePerKm) {
       showToast('Please fill all required fields.', 'error');
       return;
     }
 
     try {
-      const selectedVendor = vendorsList.find(o => o.vendorId === vendors);
+      setLoading(true);
       const payload = {
-        vehicleNumber,
-        vehicleId: vehicleModel,
-        vendorId: vendors,
-        vendors: selectedVendor?.vendorName || '',
+        vehicle_type: vehicleType,
+        vehicle_number: vehicleNumber,
+        seating_capacity: parseInt(seatingCapacity, 10),
+        price_per_km: parseFloat(pricePerKm),
+        status: status,
       };
 
-      const res = await axiosInstance.post('/vendor/createVehicleMaster', payload);
+      const res = await axiosInstance.post('/vehicles', payload);
 
-      if (res.status === 201 || res.status === 200) {
-        showToast('Vehicle master added successfully!', 'success');
-
-        // ✅ Clear form manually
+      if (res.status === 201) {
+        showToast('Vehicle registered successfully!', 'success');
         setTimeout(() => {
-          const inputs = document.querySelectorAll('input, select') as NodeListOf<HTMLInputElement | HTMLSelectElement>;
-          inputs.forEach(input => input.value = '');
-        }, 100);
-
-        navigate('/vehicle/vehiclemaster/list');
-      } else {
-        showToast('Something went wrong. Try again.', 'error');
+          navigate('/fleet/vehicles');
+        }, 1000);
       }
-    } catch (err) {
-      console.error('Error submitting form:', err);
-      showToast('Server error. Please try again.', 'error');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Server error. Please try again.';
+      showToast(msg, 'error');
+    } finally {
+      setLoading(false);
     }
   };
-
-  const vehicleModelOptions = [
-    { value: '', label: 'Select a vehicle model' },
-    ...vehicleModels.map(v => ({
-      value: v.vehicleId,
-      label: v.vehicleName,
-    })),
-  ];
-
-  const vendorOptions = [
-    { value: '', label: 'Select a owner' },
-    ...vendorsList.map(o => ({
-      value: o.vendorId,
-      label: o.vendorName,
-    })),
-  ];
 
   return (
     <PageLayout>
       <AlertContainer />
+      <main className="py-6">
+        <h1 className="text-3xl font-bold text-gray-800">Add Vehicle</h1>
+        <div className="text-lg font-semibold text-[#275981] py-5 underline">
+          <FontAwesomeIcon icon={faClipboardList} /> Fleet Registration
+        </div>
 
-      <div className="py-6">
-        <h1 className="text-3xl font-bold text-gray-800">Add Vehicle Master</h1>
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-lg bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <InputBox
+            label="Vehicle Type *"
+            name="vehicleType"
+            required
+            placeholder="e.g. Sedan, SUV"
+            value={vehicleType}
+            onChange={(name, value) => setVehicleType(value)}
+          />
 
-        <form onSubmit={handleSubmit} className="max-w-4xl text-left">
-          <div className="text-lg font-semibold text-[#275981] py-5 underline" >
-            
-           <FontAwesomeIcon icon={faClipboardList} /> Vehicle Type Info</div>
+          <InputBox
+            label="Vehicle Plate Number *"
+            name="vehicleNumber"
+            required
+            placeholder="e.g. TN01AB1234"
+            icon={faCar}
+            value={vehicleNumber}
+            onChange={(name, value) => setVehicleNumber(value)}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left column */}
-            <div className="flex flex-col gap-4 w-[280px]">
-              <InputBox
-                label="Vehicle Number"
-                name="vehicleNumber"
-                placeholder="Enter Vehicle Number"
-                required
-                icon={faIdCard}
-              />
-              <span className="text-xs text-gray-400">Enter a vehicle number E.g: CM 8643</span>
+          <InputBox
+            label="Seating Capacity *"
+            name="seatingCapacity"
+            type="number"
+            required
+            placeholder="e.g. 4, 6, 7"
+            value={seatingCapacity}
+            onChange={(name, value) => setSeatingCapacity(value)}
+          />
 
-              <InputBox
-                label="Owner"
-                name="vendors"
-                options={vendorOptions}
-                required
-                icon={faUser}
-              />
-              <span className="text-xs text-gray-400">Select a owner</span>
-            </div>
+          <InputBox
+            label="Price Per KM (₹) *"
+            name="pricePerKm"
+            type="number"
+            required
+            placeholder="e.g. 18.00, 25.00"
+            value={pricePerKm}
+            onChange={(name, value) => setPricePerKm(value)}
+          />
 
-            {/* Right column */}
-            <div className="flex flex-col gap-4 w-[280px]">
-              <InputBox
-                label="Vehicle Model"
-                name="vehicleModel"
-                options={vehicleModelOptions}
-                required
-                icon={faCar}
-              />
-              <span className="text-xs text-gray-400">Select a vehicle model</span>
-            </div>
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Status *
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end">
-            <CommonButton type="submit" variant="success" className="px-8 py-2">
-              Save
+            <CommonButton
+              type="submit"
+              variant="success"
+              className="px-6 py-2 text-lg"
+              disabled={loading}
+            >
+              {loading ? 'Registering...' : 'Register Vehicle'}
             </CommonButton>
           </div>
         </form>
-      </div>
+      </main>
     </PageLayout>
   );
 };

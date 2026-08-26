@@ -11,11 +11,10 @@ const TermsAndConditions: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-   {/* Breadcrumb */}
         <nav className="text-sm text-gray-600 mb-3">
           <Link
             to="/"
-            className="text-green-700 font-medium hover:text-green-900 transition-colors duration-200"
+            className="text-[#1B4F8A] font-medium hover:text-[#12376B] transition-colors duration-200"
           >
             Home
           </Link>{' '}
@@ -24,37 +23,34 @@ const TermsAndConditions: React.FC = () => {
         </nav>
 
         {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: '#003366' }}>
+        <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: '#1B4F8A' }}>
           Terms And Conditions
         </h2>
 
-
-
-        
         {/* Introduction */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <p className="text-gray-700 leading-relaxed mb-4">
-            The information contained in this website is for general information purposes only. The information is provided by Grace Cabs and while we endeavor to keep the information up to date and correct, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the website or the information, products, services, or related graphics contained on the website for any purpose. Any reliance you place on such information is therefore strictly at your own risk.
+            The information contained in this website is for general information purposes only. The information is provided by SwiftRide and while we endeavor to keep the information up to date and correct, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the website or the information, products, services, or related graphics contained on the website for any purpose. Any reliance you place on such information is therefore strictly at your own risk.
           </p>
           <p className="text-gray-700 leading-relaxed mb-4">
             In no event will we be liable for any loss or damage including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from loss of data or profits arising out of, or in connection with, the use of this website.
           </p>
           <p className="text-gray-700 leading-relaxed mb-4">
-            Through this website you are able to link to other websites which are not under the control of Grace Cabs. We have no control over the nature, content and availability of those sites. The inclusion of any links does not necessarily imply a recommendation or endorse the views expressed within them.
+            Through this website you are able to link to other websites which are not under the control of SwiftRide. We have no control over the nature, content and availability of those sites. The inclusion of any links does not necessarily imply a recommendation or endorse the views expressed within them.
           </p>
           <p className="text-gray-700 leading-relaxed">
-            Every effort is made to keep the website up and running smoothly. However, Grace Cabs takes no responsibility for, and will not be liable for, the website being temporarily unavailable due to technical issues beyond our control.
+            Every effort is made to keep the website up and running smoothly. However, SwiftRide takes no responsibility for, and will not be liable for, the website being temporarily unavailable due to technical issues beyond our control.
           </p>
         </div>
 
         {/* Definitions Section */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-2xl font-bold text-teal-600 mb-4">Definitions</h3>
+          <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">Definitions</h3>
           <p className="text-gray-700 mb-4">
             In this document, the following definitions are to be used and so interpreted, except for when the context implies other meanings:
           </p>
           <ul className="space-y-2 text-gray-700">
-            <li><strong>Company</strong> will refer to Grace Cabs.</li>
+            <li><strong>Company</strong> will refer to SwiftRide.</li>
             <li><strong>Employee</strong> will refer to any of the Company's employees including, but not limited to, a driver, a member of the sales and support team, a technician or a member of the administration board.</li>
             <li><strong>Hirer or Client</strong> will refer to the person who signed the contract and who is responsible to pay the fees.</li>
             <li><strong>Contract</strong> will refer to the legal agreement between the Company and the Hirer that specifies all aspects of the service.</li>
@@ -72,7 +68,7 @@ const TermsAndConditions: React.FC = () => {
 
         {/* Responsibilities Section */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-2xl font-bold text-teal-600 mb-4">Responsibilities</h3>
+          <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">Responsibilities</h3>
           <div className="space-y-4 text-gray-700">
             <p>
               The Hirer is responsible and will be held accountable for the proper behavior of all the passengers in his Party. The Hirer is responsible and will be held accountable for any damages caused to either the inside or the outside of the Car by the Client or a member of the Party, regardless of how these were caused, as long as the aforementioned damages aren't the result of the normal operating of the vehicle.
@@ -94,7 +90,7 @@ const TermsAndConditions: React.FC = () => {
 
         {/* General Conduct Section */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-2xl font-bold text-teal-600 mb-4">General Conduct</h3>
+          <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">General Conduct</h3>
           <div className="space-y-4 text-gray-700">
             <p>
               Consumption of food is not allowed inside the Vehicle, unless specific agreements have been made prior to the Booking and consigned in writing.
@@ -110,7 +106,7 @@ const TermsAndConditions: React.FC = () => {
 
         {/* Safety Requirements Section */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-2xl font-bold text-teal-600 mb-4">Safety Requirements</h3>
+          <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">Safety Requirements</h3>
           <div className="space-y-4 text-gray-700">
             <p>
               The Company has a strict no-smoking policy inside all Vehicles. Failure to comply with this requirement may lead to the immediate cancellation of the Contract, without a refund.
@@ -135,7 +131,7 @@ const TermsAndConditions: React.FC = () => {
 
         {/* Limitation of Liability Section */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-2xl font-bold text-teal-600 mb-4">Limitation of Liability</h3>
+          <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">Limitation of Liability</h3>
           <div className="space-y-4 text-gray-700">
             <p>
               The Hirer agrees not to hold the Company accountable for any losses directly or indirectly correlated with failure to meet the Hirer's deadlines.
@@ -158,18 +154,18 @@ const TermsAndConditions: React.FC = () => {
 
 {/* App Usage & Responsibilities Section */}
 <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-  <h3 className="text-2xl font-bold text-teal-600 mb-4">App Usage & Responsibilities</h3>
+  <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">App Usage & Responsibilities</h3>
   <div className="space-y-4 text-gray-700">
     <p>
-      In addition to the above terms, the Company provides a mobile application("cab booking app") through which Users, Vendors, and Drivers may manage their respective activities. Users who log in through the App can create bookings or orders directly. These bookings will appear in the User’s account, and Users can also view the status of their bookings at any time.
+      In addition to the above terms, the Company provides a mobile application ("SwiftRide App") through which Users, Vendors, and Drivers may manage their respective activities. Users who log in through the App can create bookings or orders directly. These bookings will appear in the User’s account, and Users can also view the status of their bookings at any time.
     </p>
 
     <p>
-      Vendors who log in to the App may review the bookings or orders assigned to them and provide their approval for the same. Approval indicates acceptance of the details provided, as well as agreement to follow the Company’s service standards and operational guidelines. Vendors or Owners are responsible for ensuring the availability and suitability of vehicles and drivers assigned through the cab booking app.
+      Vendors who log in to the App may review the bookings or orders assigned to them and provide their approval for the same. Approval indicates acceptance of the details provided, as well as agreement to follow the Company’s service standards and operational guidelines. Vendors or Owners are responsible for ensuring the availability and suitability of vehicles and drivers assigned through the SwiftRide app.
     </p>
 
     <p>
-      Drivers who log in to the App are able to view trips assigned to them. Drivers are required to use the App to start the trip when the journey physically begins and end the trip when the journey is completed. Accurate trip updates, responsible conduct, and compliance with Company policies remain mandatory while using the cab booking app.
+      Drivers who log in to the App are able to view trips assigned to them. Drivers are required to use the App to start the trip when the journey physically begins and end the trip when the journey is completed. Accurate trip updates, responsible conduct, and compliance with Company policies remain mandatory while using the SwiftRide app.
     </p>
 
     <p>
@@ -177,13 +173,13 @@ const TermsAndConditions: React.FC = () => {
     </p>
 
     <p>
-      Availability of the App is dependent on external technical services, and the Company is not liable for any issues arising from network interruptions, device malfunctions, or temporary technical failures. Responsibility for maintaining login confidentiality rests solely with the User, Vendor, or Driver accessing the cab booking app.
+      Availability of the App is dependent on external technical services, and the Company is not liable for any issues arising from network interruptions, device malfunctions, or temporary technical failures. Responsibility for maintaining login confidentiality rests solely with the User, Vendor, or Driver accessing the SwiftRide app.
     </p>
   </div>
 </section>
         {/* Final Considerations Section */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-2xl font-bold text-teal-600 mb-4">Final Considerations</h3>
+          <h3 className="text-2xl font-bold text-[#1B4F8A] mb-4">Final Considerations</h3>
           <div className="space-y-4 text-gray-700">
             <p>
               Should, at any point, be any of these terms and conditions be rendered invalid then this agreement will by no means be considered invalid. All other terms and conditions in this document shall remain in force.
@@ -201,9 +197,9 @@ const TermsAndConditions: React.FC = () => {
             <div className="mt-6 space-y-2">
               <p>• Please do not insist and/or encourage the driver for overspeeding, jumping traffic signals, driving in wrong lane/side, overtaking, offroading, race/competition etc.</p>
               <p>• We strictly recommend NOT to leave any cash, valuables, precious items like laptops, mobiles, wallets, handbags, luggage etc in the vehicle.</p>
-              <p>• Grace Cabs or any driver engaged through it will NOT be responsible for any loss, theft or damage.</p>
+              <p>• SwiftRide or any driver engaged through it will NOT be responsible for any loss, theft or damage.</p>
               <p>• Please insist the driver to display the company ID card every time the driver reports for your booking.</p>
-              <p>• We accept payments ONLY in cash and should be made by the customer directly to the driver at the end of the booking.</p>
+              <p>• We accept payments through the SwiftRide app or in cash directly to the driver at the end of the booking.</p>
               <p>• Management is not responsible in case of any incidents if you hire a driver directly without office intimation.</p>
               <p>• Please do not support, insist and/or encourage the driver to drive the vehicle under any influence of alcohol, drugs etc.</p>
               <p>• For any grievance or complaints you can contact us at our call center or our support email address.</p>

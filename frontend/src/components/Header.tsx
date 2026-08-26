@@ -16,7 +16,12 @@ const Header: React.FC = () => {
 
   const confirmLogout = () => {
     logout();
-    navigate('/adminlogin');
+    const lowerRole = role.toLowerCase();
+    if (lowerRole === 'user' || lowerRole === 'customer') {
+      navigate('/login');
+    } else {
+      navigate('/login');
+    }
     setShowConfirm(false);
   };
 

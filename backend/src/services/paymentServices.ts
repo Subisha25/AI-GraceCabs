@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
 import { Payment } from "../models/payment";
 import { Invoice } from "../models/invoice";
-import { Booking } from "../models";
+import { Booking, Company, User } from "../models";
 
 import config from "../config/config";
 import { ORDER } from "../utils/costants";
@@ -760,7 +760,7 @@ export const paymentReturnRelay = async (req: Request, res: Response) => {
       log('RETURN_RELAY_STATUS_CHECK_ERROR', { orderId, message: e?.message, data: e?.response?.data });
     }
 
-    const feUrl = new URL('https://gracecabs.com/payments/return');
+    const feUrl = new URL('https://localhost:3000/payments/return');
     if (orderId) feUrl.searchParams.set('orderId', String(orderId));
     feUrl.searchParams.set('statusHint', canonicalStatus);
     if (reason) feUrl.searchParams.set('reason', String(reason));
@@ -769,7 +769,7 @@ export const paymentReturnRelay = async (req: Request, res: Response) => {
     return res.redirect(302, feUrl.toString());
   } catch (err: any) {
     log('RETURN_RELAY_ERROR', { message: err?.message });
-    return res.redirect(302, 'https://gracecabs.com/payments/return');
+    return res.redirect(302, 'https://localhost:3000/payments/return');
   }
 };
 
@@ -869,9 +869,99 @@ async function applyPaymentSuccessSideEffects(paymentId: string) {
   log('SIDE_EFFECTS_DONE', { paymentId });
 }
 
+export const getAllPayments = async (req: any, res: Response) => {
+  try {
+    const payments = await Payment.findAll({
+      order: [['createdAt', 'DESC']]
+    });
+
+    const formatted = [];
+    for (const p of payments) {
+      const invoices = await Invoice.findAll({ where: { paymentId: p.paymentId } });
+      const invoiceNumber = invoices.map(i => i.invoiceNumber).join(', ') || '—';
+      const companyId = invoices[0]?.companyId || null;
+      let companyName = '—';
+      if (companyId) {
+        const company = await Company.findByPk(companyId);
+        companyName = company ? company.companyName : '—';
+      }
+
+      formatted.push({
+        paymentId: p.paymentId,
+        amount: p.amount,
+        paymentMode: p.paymentMode,
+        transactionId: p.transactionId || '—',
+        status: p.status,
+        isOnline: p.isOnline,
+        invoiceNumber,
+        companyName,
+        createdAt: p.createdAt
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      payments: formatted
+    });
+  } catch (error: any) {
+    console.error('getAllPayments error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
+  }
+};
+
+export const createPayment = async (req: any, res: Response) => {
+  try {
+    const { invoiceId, amount, paymentMode, transactionId, notes } = req.body;
+    if (!invoiceId || !amount) {
+      return res.status(400).json({ success: false, message: 'invoiceId and amount are required' });
+    }
+
+    const invoice = await Invoice.findByPk(invoiceId);
+    if (!invoice) {
+      return res.status(404).json({ success: false, message: 'Invoice not found' });
+    }
+
+    // Create Payment
+    const payment = await Payment.create({
+      paymentMode: paymentMode || 'Cash',
+      isOnline: false,
+      isActive: true,
+      transactionId: transactionId || null,
+      status: 'SUCCESS',
+      amount: amount,
+      tax: 0,
+      notes: notes || ''
+    });
+
+    // Update Invoice
+    invoice.paymentId = payment.paymentId;
+    invoice.invoiceStatus = '9'; // PAID status
+    await invoice.save();
+
+    // If there is an associated booking, update booking status too
+    if (invoice.bookingId) {
+      await Booking.update(
+        { bookingStatus: ORDER.STATUS.PAYMENTCOMPLETED },
+        { where: { bookingId: invoice.bookingId } }
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Payment recorded successfully',
+      payment
+    });
+  } catch (error: any) {
+    console.error('createPayment error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
+  }
+};
+
 export default {
   createPaymentSession,
   paymentCallback,
   getPaymentStatus,
-  paymentReturnRelay
+  paymentReturnRelay,
+  getAllPayments,
+  createPayment
 };

@@ -14,7 +14,8 @@ import {
 // import { Vehicle } from './vehicle';
 import { Employee } from './employee';
 import { Invoice } from './invoice';
- import { VehicleMaster } from './vehicleMaster';
+import { VehicleMaster } from './vehicleMaster';
+import { FleetOperator } from './fleetOperator';
 
 
 @DefaultScope(() => ({
@@ -29,6 +30,16 @@ import { Invoice } from './invoice';
   updatedAt: false,
 })
 export class Vendor extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
   @PrimaryKey
   @Column({
   type: DataType.UUID,

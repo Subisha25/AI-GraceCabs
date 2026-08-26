@@ -16,7 +16,7 @@ import { User } from './user';
 import { Invoice } from './invoice';
 import {MonthlyInvoice } from './monthlyInvoice';
 import { Booking } from './booking';
-
+import { FleetOperator } from './fleetOperator';
 
 @DefaultScope(() => ({
   where: {
@@ -32,6 +32,16 @@ import { Booking } from './booking';
 
 
 export class Company extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
   @PrimaryKey
   @Column({
     type: DataType.UUID,

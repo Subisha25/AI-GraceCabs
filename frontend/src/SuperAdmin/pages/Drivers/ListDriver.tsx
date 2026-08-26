@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import PageLayout from "../../../components/PageLayout";
 import { DataTable, Column } from "../../../components/DataTable";
 import SearchBar from "../../../components/SearchBar";
@@ -69,6 +70,8 @@ interface EditDriverData {
 }
 
 const DriverListPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id?: string }>();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeDrivers, setActiveDrivers] = useState<Driver[]>([]);
   const [trashedDrivers, setTrashedDrivers] = useState<Driver[]>([]);
@@ -88,24 +91,40 @@ const DriverListPage: React.FC = () => {
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
   const [loadingPincode, setLoadingPincode] = useState(false);
 
+  const mapBackendDriverToFrontend = (d: any): Driver => ({
+    driverId: d.id,
+    driverName: d.name,
+    driverEmail: d.email || '',
+    phno: d.mobile,
+    address: d.address || '',
+    country: d.country || 'India',
+    state: d.state || '',
+    city: d.city || '',
+    pincode: d.pincode || '',
+    vehicleTypeId: d.vehicle_type_id || '',
+    isDeleted: d.status === 'inactive',
+    licenseNo: d.license_number || '',
+    licExpDate: d.license_expiry || ''
+  });
+
   // Function to fetch all drivers
   const fetchDrivers = async () => {
     setLoading(true);
     try {
-      if (searchQuery.trim() === "") {
-        const [activeRes, trashedRes] = await Promise.all([
-          axiosInstance.get<GetAllDriversResponse>("/driver/getAllDrivers?status=active"),
-          axiosInstance.get<GetAllDriversResponse>("/driver/getAllDrivers?status=trashed"),
-        ]);
-        setActiveDrivers(activeRes.data.drivers);
-        setTrashedDrivers(trashedRes.data.drivers);
-      } else {
-        const searchRes = await axiosInstance.get<Driver[]>(`/globalsearch`, {
-          params: { model: "drivers", keyword: searchQuery },
-        });
-        const results = searchRes.data;
-        setActiveDrivers(results.filter((d) => !d.isDeleted));
-        setTrashedDrivers(results.filter((d) => d.isDeleted));
+      const res = await axiosInstance.get('/drivers');
+      if (res.data && res.data.success) {
+        let allDrivers = res.data.data.map(mapBackendDriverToFrontend);
+        if (searchQuery.trim() !== "") {
+          const query = searchQuery.toLowerCase();
+          allDrivers = allDrivers.filter((d: Driver) => 
+            d.driverName.toLowerCase().includes(query) ||
+            d.phno.includes(query) ||
+            d.driverEmail.toLowerCase().includes(query) ||
+            d.licenseNo?.toLowerCase().includes(query)
+          );
+        }
+        setActiveDrivers(allDrivers.filter((d: Driver) => !d.isDeleted));
+        setTrashedDrivers(allDrivers.filter((d: Driver) => d.isDeleted));
       }
     } catch (err) {
       showToast("Failed to fetch driver data.", "error");
@@ -157,12 +176,35 @@ const DriverListPage: React.FC = () => {
     fetchDrivers();
   }, [viewTrashed]);
 
+  // Trigger edit modal if ID parameter is in URL
+  useEffect(() => {
+    if (id && activeDrivers.length > 0) {
+      const driver = activeDrivers.find(d => d.driverId === id);
+      if (driver) {
+        handleEdit(driver);
+      }
+    }
+  }, [id, activeDrivers]);
+
   // Fetch all vehicle types
   useEffect(() => {
     const fetchVehicleTypes = async () => {
       try {
-        const res = await axiosInstance.get<{ data: VehicleType[] }>("/vehicleType/getAllVehicleType");
-        setVehicleTypes(res.data.data);
+        const res = await axiosInstance.get<{ data: any[] }>("/vehicles");
+        if (res.data && Array.isArray(res.data.data)) {
+          const seen = new Set();
+          const mapped: VehicleType[] = [];
+          res.data.data.forEach((item) => {
+            if (!seen.has(item.vehicle_type)) {
+              seen.add(item.vehicle_type);
+              mapped.push({
+                vehicleTypeId: item.id,
+                vehicleType: item.vehicle_type
+              });
+            }
+          });
+          setVehicleTypes(mapped);
+        }
       } catch (err) {
         showToast('Failed to fetch vehicle types', 'error');
       }
@@ -173,18 +215,32 @@ const DriverListPage: React.FC = () => {
   // Fetch driver data for edit modal
   const handleEdit = async (driver: Driver) => {
     try {
-      const res = await axiosInstance.get(`/driver/getDriverById/${driver.driverId}`);
-      const fullDriverData = res.data.driver;
-
-      const [address1, address2] = fullDriverData.address.split(',').map((s: string) => s.trim());
-      
-      setEditData({
-        ...fullDriverData,
-        address1: address1,
-        address2: address2 || '',
-trackingSource: fullDriverData.trackingsource || "",
-      });
-      setEditModalOpen(true);
+      const res = await axiosInstance.get(`/drivers/${driver.driverId}`);
+      if (res.data && res.data.success) {
+        const d = res.data.data;
+        const addressParts = (d.address || '').split(',').map((s: string) => s.trim());
+        const address1 = addressParts[0] || '';
+        const address2 = addressParts.slice(1).join(', ') || '';
+        
+        setEditData({
+          driverId: d.id,
+          driverName: d.name,
+          driverEmail: d.email || '',
+          phno: d.mobile,
+          address: d.address || '',
+          address1: address1,
+          address2: address2,
+          country: d.country || 'India',
+          state: d.state || '',
+          city: d.city || '',
+          pincode: d.pincode || '',
+          vehicleTypeId: d.vehicle_type_id || '',
+          licenseNo: d.license_number || '',
+          licExpDate: d.license_expiry || '',
+          trackingSource: d.tracking_source || ''
+        });
+        setEditModalOpen(true);
+      }
     } catch (error) {
       showToast("Failed to load driver data for editing.", "error");
     }
@@ -226,26 +282,25 @@ trackingSource: fullDriverData.trackingsource || "",
     const fullAddress = `${editData.address1}${editData.address2 ? `, ${editData.address2}` : ''}`;
 
     const payload = {
-      driverName: editData.driverName,
-      driverEmail: editData.driverEmail,
-      phno: editData.phno,
+      name: editData.driverName,
+      email: editData.driverEmail || null,
+      mobile: editData.phno,
       address: fullAddress,
-      city: editData.city,
-      state: editData.state,
-      country: editData.country,
-      pincode: editData.pincode,
-      vehicleTypeId: editData.vehicleTypeId,
-        licenseNo: editData.licenseNo,    
-  licExpDate: editData.licExpDate, 
-  trackingSource: editData.trackingSource,
+      license_number: editData.licenseNo,    
+      license_expiry: editData.licExpDate || null,
+      status: 'active'
     };
 
     try {
-      await axiosInstance.put(`/driver/update/${editData.driverId}`, payload);
+      await axiosInstance.put(`/drivers/${editData.driverId}`, payload);
       showToast("Driver updated successfully!", "success");
       setEditModalOpen(false);
       setEditData(null);
-      fetchDrivers();
+      if (id) {
+        navigate('/fleet/drivers');
+      } else {
+        fetchDrivers();
+      }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to update driver.';
       showToast(errorMessage, 'error');
@@ -262,11 +317,15 @@ trackingSource: fullDriverData.trackingsource || "",
   const confirmDelete = async () => {
     if (!selectedDriver) return;
     try {
-      await axiosInstance.delete(`/driver/delete/${selectedDriver.driverId}`);
-      showToast(`Driver '${selectedDriver.driverName}' deleted successfully.`, "success");
-      fetchDrivers();
-    } catch (err) {
-      showToast("Failed to delete driver.", "error");
+      const res = await axiosInstance.delete(`/drivers/${selectedDriver.driverId}`);
+      if (res.data && res.data.success) {
+        showToast(`Driver '${selectedDriver.driverName}' deleted successfully.`, "success");
+        fetchDrivers();
+      } else {
+        showToast(res.data?.message || "Failed to delete driver.", "error");
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || "Failed to delete driver.", "error");
     } finally {
       setModalOpen(false);
       setSelectedDriver(null);
@@ -283,11 +342,20 @@ trackingSource: fullDriverData.trackingsource || "",
   const confirmRestore = async () => {
     if (!selectedDriver) return;
     try {
-      await axiosInstance.put(`/driver/restore/${selectedDriver.driverId}`);
+      const payload = {
+        name: selectedDriver.driverName,
+        email: selectedDriver.driverEmail || null,
+        mobile: selectedDriver.phno,
+        address: selectedDriver.address,
+        license_number: selectedDriver.licenseNo,    
+        license_expiry: selectedDriver.licExpDate || null,
+        status: 'active'
+      };
+      await axiosInstance.put(`/drivers/${selectedDriver.driverId}`, payload);
       showToast(`Driver '${selectedDriver.driverName}' restored successfully.`, "success");
       fetchDrivers();
-    } catch (err) {
-      showToast("Failed to restore driver.", "error");
+    } catch (err: any) {
+      showToast(err.response?.data?.message || "Failed to restore driver.", "error");
     } finally {
       setModalOpen(false);
       setSelectedDriver(null);
@@ -498,7 +566,7 @@ trackingSource: fullDriverData.trackingsource || "",
                 <div className="flex justify-end gap-2 mt-6">
                   <CommonButton
                     type="button"
-                    onClick={() => setEditModalOpen(false)}
+                    onClick={() => { setEditModalOpen(false); if (id) navigate('/fleet/drivers'); }}
                     variant="secondary"
                   >
                     Cancel

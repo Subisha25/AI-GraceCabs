@@ -227,7 +227,7 @@ onInvoice={!showTrashed ? async (row: any) => {
     const companyName = res?.data?.data?.companyName?.toLowerCase();
 
     // ✅ CONDITION
-    if (companyName?.includes("grace cabs")) {
+    if (companyName?.includes("new local ai mobility platform")) {
       navigate(`/users/createinvoice/${r.userId}?companyId=${r.companyId}`);
     } else {
       navigate(`/users/userinvoice/${r.userId}?companyId=${r.companyId}`);

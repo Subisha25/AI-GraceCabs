@@ -3,19 +3,20 @@ import dotenv from "dotenv";
 // Loading env to process
 dotenv.config();
 
-const WEB_BASE_URL = process.env.WEB_BASE_URL || "http://localhost:3001";
-const BASE_URL = process.env.API_BASE_URL || "http://localhost:5001";
+const WEB_BASE_URL = process.env.WEB_BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.API_BASE_URL || "http://localhost:5005";
 
 const config = {
+  appName: process.env.APP_NAME || "New Local AI Mobility Platform",
   server: {
     protocol: process.env.PROTOCOL || "http",
-    host: process.env.API_HOST || "0.0.0.0",
-    port: parseInt(process.env.API_PORT || "5555"),
+    host: process.env.API_HOST || "localhost",
+    port: parseInt(process.env.API_PORT || "5005"),
   },
   baseurl:
   {
-    webbaseurl: WEB_BASE_URL || "http://localhost:3001",
-    apibaseurl: process.env.API_BASE_URL || "https://gracecabs.com",
+    webbaseurl: WEB_BASE_URL || "http://localhost:3000",
+    apibaseurl: process.env.API_BASE_URL || "http://localhost:5005",
   },
   database: {
     host: process.env.DB_HOST || "",
@@ -57,7 +58,7 @@ const config = {
     smtp_port: process.env.SMTP_EMAIL_PORT ? parseInt(process.env.SMTP_EMAIL_PORT) : 587,
   },
   companyurl: {
-    seo_base: process.env.SEO_BASE_URL || "http://gracecabs.com/Company/"
+    seo_base: process.env.SEO_BASE_URL || "http://localhost:3000/Company/"
   },
   paymentgateway: {
     pg_merchant_id: process.env.PG_MERCHANT_ID || "",

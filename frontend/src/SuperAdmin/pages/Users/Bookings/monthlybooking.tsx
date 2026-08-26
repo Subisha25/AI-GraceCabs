@@ -1206,29 +1206,35 @@ export default function Monthlybooking() {
   });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // 1. GET /company/getAllCompany & GET /vehicleType/getAllVehicleType
+  // 1. GET /organizations & GET /vehicles
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
         const [compRes, vtRes] = await Promise.all([
-          axiosInstance.get("/company/getAllCompany", { params: { status: 0 } }),
-          axiosInstance.get("/vehicleType/getAllVehicleType", { params: { status: 0 } }),
+          axiosInstance.get("/organizations"),
+          axiosInstance.get("/vehicles"),
         ]);
 
         const cList = (compRes.data?.data || []).map((c: any) => ({
-          value: c.companyId,
-          label: c.companyName,
+          value: c.id,
+          label: c.name,
           meta: c,
         }));
 
-        const vtList = (vtRes.data?.data || [])
-          .filter((vt: any) => !vt.isDeleted)
-          .map((vt: any) => ({
-            value: vt.vehicleTypeId,
-            label: vt.vehicleType,
-            meta: vt,
-          }));
+        const rawVehicles = vtRes.data?.data || [];
+        const seen = new Set();
+        const vtList: any[] = [];
+        rawVehicles.forEach((item: any) => {
+          if (!seen.has(item.vehicle_type)) {
+            seen.add(item.vehicle_type);
+            vtList.push({
+              value: item.id,
+              label: item.vehicle_type,
+              meta: item,
+            });
+          }
+        });
 
         setCompanies(cList);
         setVehicleTypes(vtList);

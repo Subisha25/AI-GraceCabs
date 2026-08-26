@@ -242,7 +242,7 @@ const handleOnCallDownload = async (inv: OnCallInvoice) => {
           pickupPoint: booking.pickupPoint || "-",
           pickupDate: formatToCustom(closePending.pickupDate || booking.bookingDate),
           orderDate: formatToCustom(item.createdAt),
-          userName: booking.user?.username || "-",
+          userName: booking.user?.username || booking.customer_name || "-",
           companyName: booking.user?.company?.companyName || "-",
           userId: booking.userId,
           createdAt: item.createdAt,

@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * NEW: handle the DLT / CTA style URL:
- *   https://gracecabs.com/r/?l=CODE
+ *   https://localhost:3000/r/?l=CODE
  */
 router.get('/r', async (req: Request, res: Response) => {
   const code = (req.query.l as string | undefined)?.trim();
@@ -30,7 +30,7 @@ router.get('/r', async (req: Request, res: Response) => {
 
 /**
  * OLD style fallback:
- *   https://gracecabs.com/r/CODE
+ *   https://localhost:3000/r/CODE
  * (kept for compatibility, optional)
  */
 router.get('/r/:code', async (req: Request, res: Response) => {

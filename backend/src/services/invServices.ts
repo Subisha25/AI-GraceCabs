@@ -406,7 +406,7 @@ console.log("User Email: ", recipientEmail);
       });
 
       if (company?.needEmail === false) {
-      recipientEmail = ["gracecabs1975@gmail.com","traveldesk@gracecabs.com"];
+      recipientEmail = ["admin@local.platform","traveldesk@localhost:3000"];
        
       }
     }
@@ -1246,7 +1246,7 @@ console.log("cancelll needEmail:", needEmail);
       //  console.log("inside if ",user.email);
         await sendEmailFromTemplate(cancelClientConf.emailCode, {
           UserName: "Sir",
-          UserEmail: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+          UserEmail: "admin@local.platform,traveldesk@localhost:3000",
           OrderNumber: booking.bookingCode,
           CancelRemarks: remarks || "No remarks provided",
           InvoiceDetails: `
@@ -1486,7 +1486,7 @@ const emailInvoiceBlock = htmlContent;
 
     const toEmail = needEmail
       ? userEmail
-      : "robertjayakumar@gmail.com,traveldesk@gracecabs.com";
+      : "robertjayakumar@gmail.com,traveldesk@localhost:3000";
 
     await sendEmailFromTemplate(
       conf.emailCode,

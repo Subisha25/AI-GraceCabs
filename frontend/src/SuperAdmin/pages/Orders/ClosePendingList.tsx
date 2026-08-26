@@ -20,6 +20,8 @@ interface Order {
   paymentMode?: string;
   orderDate?: string;
   pickupDate?: string;
+  customer_name?: string;
+  customer_mobile?: string;
 }
 
 interface ApiResponse {
@@ -98,9 +100,9 @@ const enrichBookings = async (bookings: Order[]): Promise<Order[]> => {
           orderDate: formatToCustom(booking.createdAt),
          // pickupDate: formatToCustom(booking.bookingDate),
                    pickupDate: formatToCustom(`${booking.bookingDate.split("T")[0]}T${booking.bookingTime}`),
-          userName: user?.username || "-",
+          userName: user?.username || booking.customer_name || "-",
           companyName,
-          emailAddress: user?.email || "-",
+          emailAddress: user?.email || booking.customer_mobile || "-",
         };
       } catch {
         return {
@@ -108,9 +110,9 @@ const enrichBookings = async (bookings: Order[]): Promise<Order[]> => {
           orderDate: formatToCustom(booking.createdAt),
          // pickupDate: formatToCustom(booking.bookingDate),
                    pickupDate: formatToCustom(`${booking.bookingDate.split("T")[0]}T${booking.bookingTime}`),
-          userName: "-",
+          userName: booking.customer_name || "-",
           companyName: "-",
-          emailAddress: "-",
+          emailAddress: booking.customer_mobile || "-",
         };
       }
     })

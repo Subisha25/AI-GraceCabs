@@ -249,12 +249,12 @@ export const createPartner = async (req: Request, res: Response) => {
       PassengerCapacity: partner.passengerCapacity.toString(),
 
       // From & To emails
-      to: "gracecabs1975@gmail.com,traveldesk@gracecabs.com",
+      to: "admin@local.platform,traveldesk@localhost:3000",
       UserEmail: partner.email,
 
       // If template uses FromName & FromAddress
-      FromName: "Grace Cabs",
-      FromAddress: "traveldesk@gracecabs.com",
+      FromName: "New Local AI Mobility Platform",
+      FromAddress: "traveldesk@localhost:3000",
     };
 
     // Send Email using template
@@ -311,15 +311,15 @@ export const getAllOrders = async (req:any, res: Response) => {
   try {
     const role = req.role;
     const userid = req.userId;
-    console.log(role,userid);
-    // if (role === ROLES.DRIVER) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Access denied. You are not authorized to view orders.',
-    //   });
-    // }
-    console.log("userrrrrrrrr",User.findOne(userid));
+    const operatorId = req.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a';
+    console.log(role,userid, operatorId);
+
+    const baseWhere: any = {
+      operatorId
+    };
+
     if(role === ROLES.USER) {
+      baseWhere.userId = userid;
       const orders = await Booking.findAll({
              include: [
                      { model: VehicleType,    required: false,    
@@ -341,7 +341,7 @@ export const getAllOrders = async (req:any, res: Response) => {
                               }
                             ]},
                  ],    
-                   where: { userId: userid },
+                   where: baseWhere,
                   order: [['createdAt', 'DESC']]
     });
   //    console.log(orders);
@@ -381,7 +381,7 @@ export const getAllOrders = async (req:any, res: Response) => {
                      },
                      
                  ],    
-                //   where: { userId: userid },
+                   where: baseWhere,
                   order: [['createdAt', 'DESC']]
     });
     //  console.log(orders);
@@ -404,12 +404,18 @@ export const getAllOrders = async (req:any, res: Response) => {
 };
 
 
-export const getOrdersByStatus = async (confirmStatus: number) => {
+export const getOrdersByStatus = async (confirmStatus: number, operatorId?: string) => {
+  const where: any = { confirmStatus };
+  if (operatorId) {
+    where.operatorId = operatorId;
+  }
   return await Booking.findAll({
-    where: { confirmStatus },include: [
-                    { model: VehicleType ,    required: false},
-                    { model: Vehicle,    required: false },
-                ], order: [["createdAt", "DESC"]],
+    where,
+    include: [
+      { model: VehicleType ,    required: false},
+      { model: Vehicle,    required: false },
+    ], 
+    order: [["createdAt", "DESC"]],
   });
 };
 
@@ -4109,7 +4115,7 @@ export const getPaymentPendingOrdersByUser = async (req: Request, res: Response)
 //     <!-- Header -->
 //     <div class="header">
 //      <div class="logo-section">
-//     <img src="${logoSrc}" alt="Grace Cabs" class="logo-img" />
+//     <img src="${logoSrc}" alt="New Local AI Mobility Platform" class="logo-img" />
 //     </div>
 //       <div class="invoice-info">
 //         <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
@@ -4219,11 +4225,11 @@ export const getPaymentPendingOrdersByUser = async (req: Request, res: Response)
 //         <div class="footer-info">
 //             <div class="footer-row">
 //                 <span class="footer-label">Regd.Office:</span>
-//                 <span>Grace Cabs  Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</span>
+//                 <span>New Local AI Mobility Platform  Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</span>
 //             </div>
 //             <div class="footer-row">
 //                 <span class="footer-label">Website:</span>
-//                 <span>gracecabs.com</span>
+//                 <span>localhost:3000</span>
 //             </div>
 //             <div class="footer-row">
 //                 <span class="footer-label">GSTIN:</span>
@@ -4394,7 +4400,7 @@ export const generateInvoiceHTMLForuser = (data: any): string => {
 
     <div class="header">
       <div class="logo-section">
-        <img src="${logoSrc}" alt="Grace Cabs" class="logo-img" />
+        <img src="${logoSrc}" alt="New Local AI Mobility Platform" class="logo-img" />
       </div>
       <div class="invoice-info">
         <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
@@ -4476,8 +4482,8 @@ export const generateInvoiceHTMLForuser = (data: any): string => {
     </table>
 
     <div class="footer-info">
-      <div class="footer-row"><span class="footer-label">Regd.Office:</span><span>Grace Cabs  Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</span></div>
-      <div class="footer-row"><span class="footer-label">Website:</span><span>gracecabs.com</span></div>
+      <div class="footer-row"><span class="footer-label">Regd.Office:</span><span>New Local AI Mobility Platform  Pvt. Ltd., 7/621 NESAMANI NAGAR, PERUMBAKKAM, CHENNAI - 600100</span></div>
+      <div class="footer-row"><span class="footer-label">Website:</span><span>localhost:3000</span></div>
       <div class="footer-row"><span class="footer-label">GSTIN:</span><span>33AAMCG2518C1Z0</span></div>
       <div class="footer-row"><span class="footer-label">PAN No.:</span><span>AAMCG2518C</span></div>
       <div class="footer-row"><span class="footer-label">SAC:</span><span>996609</span></div>

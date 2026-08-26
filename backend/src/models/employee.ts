@@ -5,19 +5,32 @@ import {
   DataType,
   PrimaryKey,
   CreatedAt,
-  HasMany
+  HasMany,
+  ForeignKey,
+  BelongsTo
 } from 'sequelize-typescript';
 
 import { Vendor } from './vendor';
 import { Company } from './company';
 import { Drivers } from './drivers';
 import { Booking } from './booking';
+import { FleetOperator } from './fleetOperator';
 @Table({
   tableName: 'employee',
   timestamps: true, 
   updatedAt: false,
 })
 export class Employee extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
   @PrimaryKey
   @Column({
   type: DataType.UUID,

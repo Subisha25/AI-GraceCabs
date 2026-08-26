@@ -15,6 +15,7 @@ import { Employee } from './employee'
 import { Booking } from './booking';
 import { Vehicle } from './vehicle';
 import { VehicleType } from './vehicleType';
+import { FleetOperator } from './fleetOperator';
 
 @DefaultScope(() => ({
   where: {
@@ -28,6 +29,16 @@ import { VehicleType } from './vehicleType';
   updatedAt: false,
 })
 export class Drivers extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
   @PrimaryKey
   @Column({
   type: DataType.UUID,

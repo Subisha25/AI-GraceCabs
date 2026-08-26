@@ -6,7 +6,10 @@ import {
   PrimaryKey,
   CreatedAt,
   DefaultScope,
+  ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
+import { FleetOperator } from './fleetOperator';
 
 @DefaultScope(() => ({
   where: {
@@ -20,6 +23,16 @@ import {
   updatedAt: false,
 })
 export class Partner extends Model {
+  @ForeignKey(() => FleetOperator)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  operatorId!: string;
+
+  @BelongsTo(() => FleetOperator)
+  operator!: FleetOperator;
+
   @PrimaryKey
   @Column({
     type: DataType.UUID,

@@ -110,7 +110,7 @@ export const empLogin = async (req: Request, res: Response) => {
         email: employee.email,
         role: employee.role,
         accessToken: Security.generateJwtToken(
-          { userId: employee.employeeId, roles: employee.role },
+          { userId: employee.employeeId, roles: employee.role, operatorId: employee.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a' },
           config.security.jwtSecret,
           config.security.accessTokenExpiry
         ),
@@ -128,7 +128,7 @@ export const empLogin = async (req: Request, res: Response) => {
         email: vendor.email,
         role: vendor.role,              //admin
         accessToken: Security.generateJwtToken(
-          { userId: vendor.vendorId, roles: vendor.role },          //roles:admin
+          { userId: vendor.vendorId, roles: vendor.role, operatorId: vendor.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a' },          //roles:admin
           config.security.jwtSecret,
           config.security.accessTokenExpiry
         ),
@@ -156,7 +156,8 @@ export const empLogin = async (req: Request, res: Response) => {
           { 
             userId: user.userId, 
             roles: userRole, 
-            companyId: user.companyId 
+            companyId: user.companyId,
+            operatorId: user.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a'
           },
           config.security.jwtSecret,
           config.security.accessTokenExpiry
@@ -291,7 +292,8 @@ export const registerUser = async (req: Request, res: Response) => {
      danfossuserId,
  managerId,
  managerEmail, 
- costCenter
+ costCenter,
+ password
     } = req.body;
 
     const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -303,47 +305,64 @@ export const registerUser = async (req: Request, res: Response) => {
         message: "User with this email already exists"
       });
     }
-const existingUserByMobile = await User.findOne({ where: { mobile } });
+    const existingUserByMobile = await User.findOne({ where: { mobile } });
 
-if (existingUserByMobile) {
-  return res.status(400).json({
-    success: false,
-    message: "Phone number already exists"
-  });
-}
-    const company = await Company.findByPk(companyId, {
-      attributes: ["companyId", "companyName", "managerEmail"]
-    });
-
-    if (!company) {
+    if (existingUserByMobile) {
       return res.status(400).json({
         success: false,
-        message: "Company not found with the provided companyId"
+        message: "Phone number already exists"
       });
     }
 
-    const isDanfoss = company.companyName?.toLowerCase().includes("danfoss");
+    let finalCompanyId = companyId || null;
+    let finalOperatorId = 'e111111d-2e65-4d7a-85d1-125035feee1a';
+    let isCompanyManager = false;
 
-    if (isDanfoss) {
-      if (!normalizedEmail.endsWith("@danfoss.com")) {
+    if (finalCompanyId) {
+      const company = await Company.findByPk(finalCompanyId, {
+        attributes: ["companyId", "companyName", "managerEmail", "operatorId"]
+      });
+
+      if (!company) {
         return res.status(400).json({
           success: false,
-          message: "For Danfoss company, email must be @danfoss.com only."
+          message: "Company not found with the provided companyId"
         });
       }
+
+      finalOperatorId = company.operatorId || finalOperatorId;
+      const isDanfoss = company.companyName?.toLowerCase().includes("danfoss");
+
+      if (isDanfoss) {
+        if (!normalizedEmail.endsWith("@danfoss.com")) {
+          return res.status(400).json({
+            success: false,
+            message: "For Danfoss company, email must be @danfoss.com only."
+          });
+        }
+      }
+
+      const managerEmails: string[] = normalizeManagerEmails(company.managerEmail as any);
+      isCompanyManager = managerEmails.includes(normalizedEmail);
     }
 
-    const managerEmails: string[] = normalizeManagerEmails(company.managerEmail as any);
-    let isCompanyManager = managerEmails.includes(normalizedEmail);
-    if(isManager) {
+    if (isManager) {
       isCompanyManager = isManager;
     }
-    console.log("ismanager: ",isManager," iscompmanager: ", isCompanyManager)
-    // ✅ Auto-generate 6 digit password
-    const generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("ismanager: ", isManager, " iscompmanager: ", isCompanyManager);
 
-    // ✅ Hash the generated password before storing in DB
-    const hashedPassword = await Security.hash(generatedPassword, 10);
+    let hashedPassword;
+    let passwordSent = false;
+    let passwordVal = password;
+
+    if (passwordVal) {
+      hashedPassword = await Security.hash(passwordVal, 10);
+    } else {
+      // ✅ Auto-generate 6 digit password
+      passwordVal = Math.floor(100000 + Math.random() * 900000).toString();
+      hashedPassword = await Security.hash(passwordVal, 10);
+      passwordSent = true;
+    }
 
     const newUser = await User.create({
       username,
@@ -354,41 +373,43 @@ if (existingUserByMobile) {
       gender,
       country,
       city,
-      companyId,
+      companyId: finalCompanyId,
       status: "active",
       isPayHolder: false,
       isConfirmed: 1,
       userAddress,
       presentAddress: presentAddress || null,
       companyManager: isCompanyManager ? 1 : 0,
-      isManager,
+      isManager: !!isManager,
       state,
       pinCode,
-         danfossuserId: danfossuserId || null,
-  managerId: managerId || null,
-  managerEmail: managerEmail || null,
-  costCenter
-
+      danfossuserId: danfossuserId || null,
+      managerId: managerId || null,
+      managerEmail: managerEmail || null,
+      costCenter,
+      operatorId: finalOperatorId
     });
 
     const createdUser = await User.findByPk(newUser.userId, {
       include: [{ model: Company, attributes: ["companyId", "companyName"] }],
     });
 
-    try {
-      await sendEmailFromTemplate("USER_REGISTRATION_EMAIL_TO_USER", {
-        UserName: username,
-        UserEmail: normalizedEmail,
-        Password: generatedPassword,
-      });
-      console.log("✅ Registration email sent to:", normalizedEmail);
-    } catch (emailErr) {
-      console.error("❌ Error sending registration email:", emailErr);
+    if (passwordSent) {
+      try {
+        await sendEmailFromTemplate("USER_REGISTRATION_EMAIL_TO_USER", {
+          UserName: username,
+          UserEmail: normalizedEmail,
+          Password: passwordVal,
+        });
+        console.log("✅ Registration email sent to:", normalizedEmail);
+      } catch (emailErr) {
+        console.error("❌ Error sending registration email:", emailErr);
+      }
     }
 
     return res.status(201).json({
       success: true,
-      message: "User registered successfully and password sent to email",
+      message: passwordSent ? "User registered successfully and password sent to email" : "User registered successfully",
       User: createdUser,
     });
 
@@ -396,7 +417,7 @@ if (existingUserByMobile) {
     console.error("Register user error:", error);
     return res.status(400).json({
       success: false,
-      message: "User with this Ph_no already exists",
+      message: "User registration failed",
       error: error.message,
     });
   }
@@ -449,7 +470,9 @@ export const userLogin = async (req: Request, res: Response) => {
     const accessToken = Security.generateJwtToken(
       { 
         userId: user.userId,
-        roles: user.role
+        roles: user.role,
+        operatorId: user.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a',
+        companyId: user.companyId || null
       },
       config.security.jwtSecret,
       config.security.accessTokenExpiry
@@ -533,6 +556,8 @@ export const CompanyLogin = async (req: Request, res: Response) => {
       {
         userId: user.userId,
         roles: updatedRole,
+        operatorId: user.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a',
+        companyId: user.companyId
       },
       config.security.jwtSecret,
       config.security.accessTokenExpiry
@@ -595,7 +620,8 @@ export const vendorLogin = async (req: Request, res: Response) => {
       accessToken: Security.generateJwtToken(
         { 
           userId: vendor.vendorId,
-          roles: vendor.role 
+          roles: vendor.role,
+          operatorId: vendor.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a'
         },
         config.security.jwtSecret,
         config.security.accessTokenExpiry
@@ -736,7 +762,9 @@ export const verifyOTPLogin = async (req: Request, res: Response) => {
     // Generate JWT token
     const tokenPayload = {
       userId: userResult.userData.id,
-      roles: userResult.userData.role
+      roles: userResult.userData.role || userResult.role,
+      operatorId: (userResult.user as any).operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a',
+      companyId: (userResult.user as any).companyId || null
     };
 
     const accessToken = Security.generateJwtToken(
@@ -913,8 +941,8 @@ export const forgetPasswordSendOtp = async (req: Request, res: Response) => {
         UserName: userResult.userData.username ?? "",
         UserEmail: userResult.userData.email ?? email,
         OTP: otp,
-        WEB_SITE_NAME: "www.gracecabs.com",
-        WEB_SITE_EMAIL: "traveldesk@gracecabs.com",
+        WEB_SITE_NAME: "www.localhost:3000",
+        WEB_SITE_EMAIL: "traveldesk@localhost:3000",
         CONTACT_NO: "+91 98417 22675",
       });
     }

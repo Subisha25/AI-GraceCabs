@@ -6,7 +6,8 @@ import {uploadUsersFromExcel, getCurrentUser,getUsersByStatus, getAllUsers, getU
     getMapCount,
     appMapCount,
     getManagerDetailsByUserId,
-    getUsersByCompany
+    getUsersByCompany,
+    getCustomers
  } from '../services/userServices';
 import { authMiddleware } from '../middleware/authMiddleware';
 import multer from "multer";
@@ -52,6 +53,7 @@ router.put("/app/appMapCount", appMapCount);
 
 router.get("/getManagerByUserId/:userId", getManagerDetailsByUserId);
 router.get("/getUsersByCompany/:companyId", getUsersByCompany);
+router.get('/customers', authMiddleware, getCustomers);
 
 
 export default router;

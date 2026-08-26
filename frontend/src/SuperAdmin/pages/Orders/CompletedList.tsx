@@ -186,7 +186,7 @@ const handleViewMonthly = (row: CompletedOrder) => {
       bookings = bookings.map((order: any) => ({
         ...order,
         userId: order?.booking?.user?.userId || order.userId,
-        userName: order?.booking?.user?.userName || order.userName,
+        userName: order?.booking?.user?.userName || order?.booking?.customer_name || order.userName,
         companyName: order?.booking?.user?.company?.companyName || order.companyName,
       }));
 
@@ -472,7 +472,7 @@ const handleViewMonthly = (row: CompletedOrder) => {
       </main>
 
     <footer className="mt-auto text-xs text-gray-500 pt-2 text-center">
-  © {new Date().getFullYear()} GraceCabs.in. Powered by Celexsa
+  © {new Date().getFullYear()} New Local AI Mobility Platform.in. Powered by Celexsa
 </footer>
 
     </PageLayout>

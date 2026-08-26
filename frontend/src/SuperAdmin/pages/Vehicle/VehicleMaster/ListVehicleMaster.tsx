@@ -1,492 +1,277 @@
 import React, { useEffect, useState } from "react";
 import PageLayout from "../../../../components/PageLayout";
 import { DataTable, Column } from "../../../../components/DataTable";
-import SearchBar from "../../../../components/SearchBar";
-import TrashToggleButton from "../../../../components/TrashToggleButton";
-import { ActionModal, showToast, AlertContainer } from "../../../../components/AlertBox";
-import InputBox from "../../../../components/InputBox";
-import axiosInstance from "../../../../utils/axiosInstance";
 import CommonButton from "../../../../components/CommonButton";
+import InputBox from "../../../../components/InputBox";
+import SearchBar from "../../../../components/SearchBar";
+import { showToast, ActionModal, AlertContainer } from "../../../../components/AlertBox";
+import axiosInstance from "../../../../utils/axiosInstance";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faTimes, faCar } from "@fortawesome/free-solid-svg-icons";
 
-interface VehicleMaster {
+interface Vehicle {
   id: string;
-  vehicleNumber: string;
-  vehicleModel: string;   // UI shows the model name
-  vehicleType: string;    // UI shows the type name
-  vendorName: string;
-  trashed: boolean;
-  // optional ids used by dropdowns (not always present in list API)
-  vehicleId?: string;
-  vehicleTypeId?: string;
-  vendorId?: string;
+  vehicle_type: string;
+  vehicle_number: string;
+  seating_capacity: number;
+  price_per_km: number;
+  image?: string;
+  status: string;
 }
-
-interface VehicleAPIResponse {
-  message: string;
-  count: number;
-  vehicles: {
-    vehicleMasterId: string;
-    vehicleNumber: string;
-    vehicleModel?: string;        // some places may send this
-    vehicleModelName?: string;    // our correct column in DB
-    vehicleType: string;
-    vendorName: string;
-    isDeleted: number;
-    vehicleId?: string;
-    vehicleTypeId?: string;
-    vendorId?: string;
-  }[];
-}
-
-interface GlobalSearchVehicleMaster {
-  vehicleMasterId: string;
-  vehicleNumber: string;
-  vehicleModelName: string;
-  vehicleType: string;
-  vendorName: string;
-  isDeleted: number;
-  vehicleId?: string;
-  vehicleTypeId?: string;
-  vendorId?: string;
-}
-
-type Option = {
-  id: string;
-  label: string;
-  vehicleTypeId?: string; // 🔥 ADD THIS
-};
-
-const ITEMS_PER_PAGE = 10;
 
 const ListVehicleMaster: React.FC = () => {
-  const [vehicleMasters, setVehicleMasters] = useState<VehicleMaster[]>([]);
-  const [search, setSearch] = useState("");
-  const [showTrashed, setShowTrashed] = useState(false);
+  const navigate = useNavigate();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchText, setSearchText] = useState("");
+  const [searchInput, setSearchInput] = useState("");
 
-  // Modals
-  const [modalType, setModalType] = useState<"confirm-delete" | "confirm-restore" | null>(null);
-  const [targetRow, setTargetRow] = useState<VehicleMaster | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editType, setEditType] = useState("");
+  const [editNumber, setEditNumber] = useState("");
+  const [editCapacity, setEditCapacity] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editStatus, setEditStatus] = useState("active");
 
-  // Edit modal
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editData, setEditData] = useState<Partial<VehicleMaster>>({});
+  // Modal
+  const [modalType, setModalType] = useState<"confirm-delete" | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
-  // Dropdown options
-  const [modelOpts, setModelOpts] = useState<Option[]>([]);
-  const [typeOpts, setTypeOpts]   = useState<Option[]>([]);
-  const [vendorOpts, setVendorOpts] = useState<Option[]>([]);
-
-  // ---------- Fetch dropdowns ----------
-  useEffect(() => {
-    (async () => {
-      try {
-        const [m, t, o] = await Promise.all([
-          axiosInstance.get("/vehicleMaster/dropdown/models"), // { data: [{id,label}] }
-          axiosInstance.get("/vehicleMaster/dropdown/types"),
-          axiosInstance.get("/vehicleMaster/dropdown/vendors"),
-        ]);
-        setModelOpts(m.data?.data || []);
-        setTypeOpts(t.data?.data || []);
-        setVendorOpts(o.data?.data || []);
-      } catch (e) {
-        showToast("Failed to load dropdown data", "warn");
-      }
-    })();
-  }, []);
-
-  // ---------- Fetch list ----------
-  const fetchVehicleMasters = async () => {
-    setLoading(true);
+  const fetchData = async () => {
     try {
-      const response = await axiosInstance.get<VehicleAPIResponse>(
-        `/vehicleMaster/getAllVehicleMaster?status=${showTrashed ? 1 : 0}`
-      );
-      const formatted: VehicleMaster[] = response.data.vehicles.map((item) => ({
-        id: item.vehicleMasterId,
-        vehicleNumber: item.vehicleNumber,
-        vehicleModel: item.vehicleModel ?? item.vehicleModelName ?? "", // tolerate both keys
-        vehicleType: item.vehicleType,
-        vendorName: item.vendorName,
-        trashed: item.isDeleted === 1,
-        vehicleId: item.vehicleId,
-        vehicleTypeId: item.vehicleTypeId,
-        vendorId: item.vendorId,
-      }));
-      setVehicleMasters(formatted);
+      setLoading(true);
+      const res = await axiosInstance.get<{ data: Vehicle[] }>("/vehicles");
+      setVehicles(res.data?.data || []);
+      setFilteredVehicles(res.data?.data || []);
     } catch (err) {
-     
-      showToast("Failed to fetch vehicles", "error");
+      showToast("Failed to load vehicles data.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-const globalSearchFetch = async () => {
-  const q = search.trim();
-  if (!q) return fetchVehicleMasters();
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  setLoading(true);
-  try {
-    const res = await axiosInstance.get(
-      "/globalsearch",
-      { params: { model: "vehiclemaster", keyword: q, isDeleted: showTrashed ? 1 : 0 } }
-    );
-
-    // Accept either:  [ ... ]  OR  { data: [ ... ] }
-    const payload = res.data;
-    const list: GlobalSearchVehicleMaster[] = Array.isArray(payload)
-      ? payload
-      : (payload?.data ?? []);
-
-    const formatted: VehicleMaster[] = (list || []).map((item) => ({
-      id: item.vehicleMasterId,
-      vehicleNumber: item.vehicleNumber,
-      vehicleModel: item.vehicleModelName,
-      vehicleType: item.vehicleType,
-      vendorName: item.vendorName,
-      trashed: item.isDeleted === 1,
-      vehicleId: item.vehicleId,
-      vehicleTypeId: item.vehicleTypeId,
-      vendorId: item.vendorId,
-    }));
-
-    setVehicleMasters(formatted);
-    setCurrentPage(1);
-  } catch (err) {
-   
-    showToast("Search failed", "error");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // ---------- Delete / Restore ----------
-  const confirmDelete = async () => {
-    if (!targetRow) return;
-    try {
-      await axiosInstance.delete(`/vehicleMaster/${targetRow.id}/delete`);
-      showToast("Vehicle deleted", "success");
-      fetchVehicleMasters();
-    } catch {
-      showToast("Delete failed", "error");
-    } finally {
-      setModalType(null);
-      setTargetRow(null);
+  useEffect(() => {
+    const term = searchText.trim().toLowerCase();
+    if (term === "") {
+      setFilteredVehicles(vehicles);
+    } else {
+      setFilteredVehicles(
+        vehicles.filter(
+          (v) =>
+            v.vehicle_number.toLowerCase().includes(term) ||
+            v.vehicle_type.toLowerCase().includes(term) ||
+            v.status.toLowerCase().includes(term)
+        )
+      );
     }
+  }, [searchText, vehicles]);
+
+  // Edit Handlers
+  const openEdit = (v: Vehicle) => {
+    setEditId(v.id);
+    setEditType(v.vehicle_type);
+    setEditNumber(v.vehicle_number);
+    setEditCapacity(v.seating_capacity.toString());
+    setEditPrice(v.price_per_km.toString());
+    setEditStatus(v.status);
   };
 
-  const confirmRestore = async () => {
-    if (!targetRow) return;
-    try {
-      await axiosInstance.put(`/vehicleMaster/${targetRow.id}/restore`);
-      showToast("Vehicle restored", "success");
-      if (showTrashed) {
-        setVehicleMasters((prev) => prev.filter((v) => v.id !== targetRow.id));
-      } else {
-        fetchVehicleMasters();
-      }
-    } catch {
-      showToast("Restore failed", "error");
-    } finally {
-      setModalType(null);
-      setTargetRow(null);
-    }
-  };
-
-  // ---------- Edit ----------
-const openEditModal = (row: VehicleMaster) => {
-  // 🔥 derive vehicleTypeId from label if missing
-  const typeId =
-    row.vehicleTypeId ??
-    typeOpts.find((t) => t.label === row.vehicleType)?.id;
-
-  // 🔥 derive vehicleId from model + type
-  const modelId =
-    row.vehicleId ??
-    modelOpts.find(
-      (m) =>
-        m.label === row.vehicleModel &&
-        m.vehicleTypeId === typeId
-    )?.id;
-
-  setEditData({
-    ...row,
-    vehicleTypeId: typeId,
-    vehicleId: modelId,
-  });
-
-  setEditModalOpen(true);
-};
-
-  const closeEditModal = () => {
-    setEditData({});
-    setEditModalOpen(false);
+  const closeEdit = () => {
+    setEditId(null);
+    setEditType("");
+    setEditNumber("");
+    setEditCapacity("");
+    setEditPrice("");
+    setEditStatus("active");
   };
 
   const saveEdit = async () => {
-    if (!editData.id) return;
+    if (!editId) return;
     try {
-      await axiosInstance.put(`/vehicleMaster/${editData.id}/update`, {
-        vehicleNumber: editData.vehicleNumber,
-        vehicleModelName: editData.vehicleModel,         // backend expects vehicleModelName
-        vehicleType: editData.vehicleType,               // stored as string in VehicleMaster
-        vendorName: editData.vendorName,
-        // optional ids from dropdowns (if you want to keep FK columns in sync)
-        vehicleId: (editData as any).vehicleId,
-        vehicleTypeId: (editData as any).vehicleTypeId,
-        vendorId: (editData as any).vendorId,
-      });
-      showToast("Updated successfully", "success");
-      setVehicleMasters((prev) =>
-        prev.map((v) => (v.id === editData.id ? { ...v, ...editData } as VehicleMaster : v))
-      );
-      closeEditModal();
-    } catch (e: any) {
-    // ✅ Extract message safely from backend response
-    const errorMessage =
-      e.response?.data?.message || "Update failed";
+      setLoading(true);
+      const payload = {
+        vehicle_type: editType,
+        vehicle_number: editNumber,
+        seating_capacity: parseInt(editCapacity, 10),
+        price_per_km: parseFloat(editPrice),
+        status: editStatus,
+      };
 
-    showToast(errorMessage, "error");
-  }
+      await axiosInstance.put(`/vehicles/${editId}`, payload);
+      showToast("Vehicle updated successfully!", "success");
+      await fetchData();
+      closeEdit();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || "Failed to update vehicle.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
-const filteredModelOpts = modelOpts.filter(
-  (m) =>
-    !editData.vehicleTypeId ||
-    m.vehicleTypeId === editData.vehicleTypeId
-);
 
+  const handleDelete = (row: Vehicle) => {
+    setSelectedVehicle(row);
+    setModalType("confirm-delete");
+  };
 
-  // ---------- Pagination ----------
-  const pageCount = Math.ceil(vehicleMasters.length / ITEMS_PER_PAGE) || 1;
-  const paginated = vehicleMasters.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const confirmDeleteAction = async () => {
+    if (!selectedVehicle) return;
+    try {
+      setLoading(true);
+      await axiosInstance.delete(`/vehicles/${selectedVehicle.id}`);
+      showToast("Vehicle deleted successfully!", "success");
+      await fetchData();
+      setModalType(null);
+    } catch (err) {
+      showToast("Failed to delete vehicle.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    fetchVehicleMasters();
-  }, [showTrashed]);
-
-  // ---------- Table Columns ----------
-  const columns: Column<VehicleMaster>[] = [
-    { header: "Vehicle Number", accessor: "vehicleNumber", sortable: true },
-    { header: "Vehicle Model", accessor: "vehicleModel", sortable: true },
-    { header: "Vehicle Type", accessor: "vehicleType", sortable: true },
-    { header: "Owner Name", accessor: "vendorName", sortable: true },
+  const columns: Column<Vehicle>[] = [
+    {
+      header: "Image",
+      accessor: "id",
+      render: (row: Vehicle) => (
+        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 border border-gray-200">
+          <FontAwesomeIcon icon={faCar} className="text-xl" />
+        </div>
+      ),
+    },
+    { header: "Vehicle Type", accessor: "vehicle_type" },
+    { header: "Vehicle Number", accessor: "vehicle_number" },
+    { header: "Seats", accessor: "seating_capacity" },
+    { header: "Price/KM (₹)", accessor: "price_per_km" },
+    { header: "Status", accessor: "status" },
   ];
-
-  // ---------- Helpers to bind dropdowns ----------
-  const getSelectedId = (opts: Option[], label?: string, id?: string) =>
-    id ?? opts.find((o) => o.label === label)?.id ?? "";
-
-  // put near other handlers
-const handleInputBox = (a: any, b?: any) => {
-  // supports onChange(value) OR onChange(name,value) OR onChange(event)
-  let name: string;
-  let value: string;
-
-  if (typeof a === "string" && typeof b === "string") {
-    // onChange(name, value)
-    name = a;
-    value = b;
-  } else if (a?.target) {
-    // onChange(event)
-    name = a.target.name;
-    value = a.target.value;
-  } else {
-    // onChange(value)
-    name = "vehicleNumber";
-    value = a ?? "";
-  }
-
-  setEditData((d) => ({ ...d, [name]: value }));
-};
-
 
   return (
     <PageLayout>
       <AlertContainer />
       <div className="py-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800">List Vehicle Master</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">All Vehicles</h1>
         </div>
 
-        {/* Search & Trash Toggle */}
-        <div className="flex flex-col sm:flex-row justify-between items-center py-5 space-y-4 sm:space-y-0 sm:space-x-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
           <SearchBar
-            placeholder="Search vehicles..."
-            value={search}
-            onChange={(v: any) => setSearch(typeof v === "string" ? v : v?.target?.value ?? "")}
-            onSearch={globalSearchFetch}
+            placeholder="Search Vehicles..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onSearch={() => setSearchText(searchInput)}
           />
-          <TrashToggleButton
-            showTrashed={showTrashed}
-            onToggle={() => {
-              setShowTrashed((t) => !t);
-              setSearch("");
-              setCurrentPage(1);
-            }}
-          />
+          <CommonButton
+            variant="success"
+            className="w-full sm:w-auto"
+            onClick={() => navigate("/fleet/vehicles/add")}
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            <span>Add Vehicle</span>
+          </CommonButton>
         </div>
 
-        {/* DataTable */}
         <DataTable
-          key={search + showTrashed + vehicleMasters.length}
+          key={searchText + vehicles.length}
           columns={columns}
-          data={vehicleMasters} 
-          onEdit={!showTrashed ? openEditModal : undefined}
-          onDelete={
-            !showTrashed ? (row) => { setTargetRow(row); setModalType("confirm-delete"); } : undefined
-          }
-          onRestore={
-            showTrashed ? (row) => { setTargetRow(row); setModalType("confirm-restore"); } : undefined
-          }
-          // loading={loading}
-          // rowsPerPage={ITEMS_PER_PAGE}
-          // emptyMessage="No vehicle entries found."
-          // uniqueRowKey="id"
+          data={filteredVehicles}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          loading={loading}
+          rowsPerPage={8}
+          emptyMessage="No vehicles found."
         />
 
-        {/* Pagination */}
-        {/* <div className="flex justify-end mt-4 space-x-2">
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-            >
-              {page}
-            </button>
-          ))}
-        </div> */}
-
-        {/* Edit Modal */}
-        {editModalOpen && (
+        {editId && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-8 w-full max-w-lg relative shadow-2xl">
+            <div className="bg-white rounded-xl p-8 w-full max-w-md relative shadow-2xl animate-fade-in">
               <button
                 className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                onClick={closeEditModal}
+                onClick={closeEdit}
               >
-                ✕
+                <FontAwesomeIcon icon={faTimes} className="text-xl" />
               </button>
-              <h2 className="text-xl font-bold text-gray-800 mb-6">Edit Vehicle Master</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Edit Vehicle</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Vehicle Number (free text) */}
-                {/* <InputBox
-                  name="vehicleNumber"
-                  label="Vehicle Number"
-                  value={editData.vehicleNumber || ""}
-                  onChange={(val) => setEditData((d) => ({ ...d, vehicleNumber: val }))}
-                  required
-                /> */}
-                <InputBox
-  name="vehicleNumber"
-  label="Vehicle Number"
-  value={editData.vehicleNumber || ""}
-  onChange={handleInputBox}
-  required
-/>
-   {/* Vehicle Type (dropdown) */}
-                <div>
-                  <label className="text-sm font-medium block mb-1">Vehicle Type *</label>
-                 <select
-  className="border rounded px-3 py-2 w-full"
-  value={getSelectedId(typeOpts, editData.vehicleType, editData.vehicleTypeId)}
-  onChange={(e) => {
-    const sel = typeOpts.find((t) => t.id === e.target.value);
+              <InputBox
+                name="editType"
+                label="Vehicle Type *"
+                required
+                placeholder="e.g. Sedan, SUV"
+                value={editType}
+                onChange={(name, value) => setEditType(value)}
+              />
 
-    setEditData((d) => ({
-      ...d,
-      vehicleType: sel?.label || "",
-      vehicleTypeId: sel?.id,
-      vehicleModel: "",      // 🔥 reset
-      vehicleId: undefined,  // 🔥 reset
-    }));
-  }}
->
+              <InputBox
+                name="editNumber"
+                label="Vehicle Plate Number"
+                required
+                placeholder="Enter plate number"
+                value={editNumber}
+                onChange={(name, value) => setEditNumber(value)}
+              />
 
-                    <option value="">Select type...</option>
-                    {typeOpts.map((t) => (
-                      <option key={t.id} value={t.id}>{t.label}</option>
-                    ))}
-                  </select>
-                </div>
+              <InputBox
+                name="editCapacity"
+                label="Seating Capacity"
+                type="number"
+                required
+                placeholder="Enter capacity"
+                value={editCapacity}
+                onChange={(name, value) => setEditCapacity(value)}
+              />
 
-                {/* Vehicle Model (dropdown) */}
-                <div>
-                  <label className="text-sm font-medium block mb-1">Vehicle Model *</label>
-                 <select
-  className="border rounded px-3 py-2 w-full"
-  value={getSelectedId(filteredModelOpts, editData.vehicleModel, editData.vehicleId)}
-  onChange={(e) => {
-    const sel = filteredModelOpts.find((m) => m.id === e.target.value);
+              <InputBox
+                name="editPrice"
+                label="Price Per KM (₹)"
+                type="number"
+                required
+                placeholder="Enter price"
+                value={editPrice}
+                onChange={(name, value) => setEditPrice(value)}
+              />
 
-    setEditData((d) => ({
-      ...d,
-      vehicleModel: sel?.label || "",
-      vehicleId: sel?.id,
-    }));
-  }}
->
-  <option value="">Select model...</option>
-  {filteredModelOpts.map((m) => (
-    <option key={m.id} value={m.id}>{m.label}</option>
-  ))}
-</select>
-
-                </div>
-
-             
-
-                {/* Owner (dropdown) */}
-                <div>
-                  <label className="text-sm font-medium block mb-1">Owner Name *</label>
-                  <select
-                    className="border rounded px-3 py-2 w-full"
-                    value={getSelectedId(vendorOpts, editData.vendorName, (editData as any).vendorId)}
-                    onChange={(e) => {
-                      const sel = vendorOpts.find((o) => o.id === e.target.value);
-                      setEditData((d) => ({ ...d, vendorName: sel?.label || "", vendorId: sel?.id }));
-                    }}
-                  >
-                    <option value="">Select owner...</option>
-                    {vendorOpts.map((o) => (
-                      <option key={o.id} value={o.id}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="available">Available</option>
+                  <option value="busy">Busy</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
               </div>
 
-              {/* <div className="flex justify-end space-x-3 mt-6">
-                <button className="btn btn-secondary" onClick={closeEditModal}>Cancel</button>
-                <button className="btn btn-primary" onClick={saveEdit}>Save</button>
-              </div> */}
-                 <div className="flex justify-end space-x-3 mt-6">
-                              <CommonButton onClick={closeEditModal} variant="secondary">
-                                Cancel
-                              </CommonButton>
-                              <CommonButton onClick={saveEdit} variant="primary" disabled={loading}>
-                                {loading ? "Saving..." : "Save"}
-                              </CommonButton>
-                            </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <CommonButton onClick={closeEdit} variant="secondary">
+                  Cancel
+                </CommonButton>
+                <CommonButton onClick={saveEdit} variant="primary" disabled={loading}>
+                  {loading ? "Saving..." : "Save"}
+                </CommonButton>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Delete/Restore Modal */}
         <ActionModal
           isOpen={modalType !== null}
           type={modalType as any}
-          onClose={() => { setModalType(null); setTargetRow(null); }}
-          onConfirm={modalType === "confirm-delete" ? confirmDelete : confirmRestore}
-          itemName={targetRow?.vehicleNumber}
+          onClose={() => setModalType(null)}
+          onConfirm={confirmDeleteAction}
+          itemName={selectedVehicle?.vehicle_number}
         />
       </div>
     </PageLayout>

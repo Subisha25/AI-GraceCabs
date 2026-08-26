@@ -238,7 +238,7 @@ export const sendEmailFromTemplate = async (
   // Headers
   // const headerFrom = `${emailConf.fromName || "No-Reply"} <${emailConf.fromAddress || smtpUser}>`;
   const headerFrom =
-  `${emailConf.fromName || "GraceCabs"} <${smtpUser}>`;
+  `${emailConf.fromName || config.appName} <${smtpUser}>`;
 
   const bccList: string[] = emailConf.emailBcc
     ? String(emailConf.emailBcc).split(",").map(s => s.trim()).filter(Boolean)
@@ -267,7 +267,7 @@ export const sendEmailFromTemplate = async (
   port: 587,
   secure: false,
   auth: {
-    user: smtpUser,       // traveldesk@gracecabs.com
+    user: smtpUser,       // traveldesk@localhost:3000
     pass: smtpPass
   },
   tls: {

@@ -3,6 +3,7 @@ import { Vendor } from '../models/vendor';
 import { Op, where } from 'sequelize';
 import bcrypt from 'bcrypt';
 import { Booking } from '../models/booking';
+import { BookingPassenger } from '../models/bookingPassenger';
 import { Vehicle } from '../models/vehicle';
 import { VehicleType } from '../models/vehicleType';
 import { Tax } from '../models/tax';
@@ -96,15 +97,16 @@ export const createBookingForWeb = async (req: any, res: Response) => {
   } = req.body;
 
   try {
-    // Logged-in person (can be employee or user)
+    // Logged-in person (can be employee, user, or customer)
     const loggedInId = req.userId;
+    const effectiveUserId = req.body.userId || loggedInId;
 
     if (req.role === ROLES.DRIVER) {
       return res.status(403).json({ message: "Not able to authorize" });
     }
 
     // Check user active/inactive
-    const user = await User.findOne({ where: { userId: userId } });
+    const user = await User.findOne({ where: { userId: effectiveUserId } });
     if (user?.status === USER_STATUS.INACTIVE) {
       return res.status(403).json({ message: "User not active" });
     }
@@ -116,16 +118,16 @@ export const createBookingForWeb = async (req: any, res: Response) => {
     if (req.role === ROLES.EMPLOYEE) {
       // Employee creating booking for user
       employeeId = loggedInId;
-    } else if (req.role === ROLES.USER) {
-      // User booking for themselves
-      employeeId = null; // no employee
+    } else {
+      // User/Customer booking for themselves
+      employeeId = null;
     }
 
     const confirmStatus = STATUS.PENDING;
     const bookingStatus = STATUS.PENDING;
     const driverTripStatus = STATUS.PENDING;
     const autoApproveStatus = STATUS.PENDING;    
-    const company = await Company.findByPk(user?.companyId);
+    const company = user?.companyId ? await Company.findByPk(user.companyId) : null;
 
     // Derive booking time if not given
     let finalBookingTime = bookingTime;
@@ -134,12 +136,13 @@ export const createBookingForWeb = async (req: any, res: Response) => {
       finalBookingTime = timePart.substring(0, 8);
     }
 
-    
     // ✅ Create booking properly
     const booking = await Booking.create({
+      operatorId: req.operatorId || user?.operatorId || 'e111111d-2e65-4d7a-85d1-125035feee1a',
+      bookingType: req.body.bookingType || (company ? 'ORGANIZATION' : 'INDIVIDUAL'),
       bookingDate,
       bookingTime: finalBookingTime,
-      employeeId, // can be null for user
+      employeeId,
       pickupPoint,
       pickupCity,
       dropPoint,
@@ -164,22 +167,32 @@ export const createBookingForWeb = async (req: any, res: Response) => {
       pickupLatitude,
       dropLatitude,
       dropLongitude,
-      userId,
-      bookingCreatedBy,
-        behalfOfName,
-        behalfOfPhone,
+      userId: effectiveUserId,
+      bookingCreatedBy: bookingCreatedBy || loggedInId,
+      behalfOfName,
+      behalfOfPhone,
       autoApproveStatus,
       pickupArea,
       predefinedArea,
       approximatetds2,
       approximatetds1,
-        // ✅ ADD THESE
-  costCenter,
-  managerUserId,
-  driverTripStatus,
-  managerEmail,
+      costCenter,
+      managerUserId,
+      driverTripStatus,
+      managerEmail,
       createdBy,
     });
+
+    if (req.body.bookingPassengers && Array.isArray(req.body.bookingPassengers)) {
+      for (const p of req.body.bookingPassengers) {
+        await BookingPassenger.create({
+          bookingId: booking.bookingId,
+          passengerName: p.passengerName,
+          passengerPhone: p.passengerPhone || null,
+          passengerEmail: p.passengerEmail || null
+        });
+      }
+    }
 
        // ================= DANFOSS MANAGER ALERT =================
    // if (company?.companyName?.toLowerCase().includes("danfoss")) {
@@ -1805,8 +1818,8 @@ console.log("cancel needEmail:", needEmail);
                 //   Vehicle: ${vehicle?.vehicleName ?? ""}
                 // `,
 
-                WEB_SITE_NAME: "www.gracecabs.com",
-        WEB_SITE_EMAIL: "traveldesk@gracecabs.com",
+                WEB_SITE_NAME: "www.localhost:3000",
+        WEB_SITE_EMAIL: "traveldesk@localhost:3000",
         CONTACT_NO: "+91 98417 22675",
         
               });
@@ -2132,10 +2145,10 @@ async function sendEmailForDanManagerFromMob(booking: any, managerEmail?: string
 
     // links
     const approveLink =
-      `https://gracecabs.com/api/emp/cnfrmBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
+      `https://localhost:3000/api/emp/cnfrmBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
 
     const rejectLink =
-      `https://gracecabs.com/api/emp/rejectBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
+      `https://localhost:3000/api/emp/rejectBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
 
     //const formattedPickupDate = moment(booking.bookingDate).tz("Asia/Kolkata").format("DD/MM/YYYY hh:mm A");
         const bookingUser = await User.findByPk(booking.userId);
@@ -2206,10 +2219,10 @@ async function sendEmailForDanManager(booking: any, managerEmail?: string, manag
 
     // links
     const approveLink =
-      `https://gracecabs.com/api/emp/cnfrmBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
+      `https://localhost:3000/api/emp/cnfrmBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
 
     const rejectLink =
-      `https://gracecabs.com/api/emp/rejectBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
+      `https://localhost:3000/api/emp/rejectBookingByManagerEmail?bookingId=${booking.bookingId}&token=${token}`;
 
     const formattedPickupDate = moment(booking.bookingDate).tz("Asia/Kolkata").format("DD/MM/YYYY hh:mm A");
         const bookingUser = await User.findByPk(booking.userId);

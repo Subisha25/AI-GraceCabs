@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PageLayout from "../../../components/PageLayout";
 import axiosInstance from "../../../utils/axiosInstance";
 import { DataTable, Column } from "../../../components/DataTable";
@@ -6,6 +7,7 @@ import SearchBar from "../../../components/SearchBar";
 import { showToast } from "../../../components/AlertBox";
 
 interface AssignedDriver {
+  bookingId: string;
   name: string;
   orderNumber: string;
   orderDate: string;
@@ -14,15 +16,16 @@ interface AssignedDriver {
 }
 
 interface BookingApiResponse {
-  bookingId: string;
-  bookingCode: string;
-  bookingDate: string;
-  createdAt: string;
-  pickupPoint: string;
-  driver?: { driverId: string; driverName: string };
+  id: string;
+  booking_code: string;
+  booking_date: string;
+  created_at: string;
+  pickup_location: string;
+  driver?: { name: string };
 }
 
 const AssignedList: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState<string>("");
   const [data, setData] = useState<AssignedDriver[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,25 +37,24 @@ const AssignedList: React.FC = () => {
     const fetchBookings = async () => {
       try {
         const res = await axiosInstance.get<{ data: BookingApiResponse[] }>(
-          "/vehicle/getAssignedTrip"
+          "/driver/trips"
         );
-        
 
-        const bookings = res.data.data;
+        const bookings = res.data.data || [];
         const formatted: AssignedDriver[] = bookings.map((b: BookingApiResponse) => ({
-          name: b.driver?.driverName || "N/A",
-          orderNumber: b.bookingCode,
-          orderDate: new Date(b.createdAt).toLocaleString(),
-          pickupDate: new Date(b.bookingDate).toLocaleDateString(),
-          pickupPoint: b.pickupPoint || "-",
+          bookingId: b.id,
+          name: b.driver?.name || "N/A",
+          orderNumber: b.booking_code,
+          orderDate: new Date(b.created_at).toLocaleString(),
+          pickupDate: new Date(b.booking_date).toLocaleDateString(),
+          pickupPoint: b.pickup_location || "-",
         }));
 
         setData(formatted);
         // Initially set filteredData to all data
         setFilteredData(formatted);
       } catch (err) {
-     
-        showToast('Failed to fetch bookings:', 'error');
+        showToast('Failed to fetch bookings', 'error');
       } finally {
         setLoading(false);
       }
@@ -77,7 +79,6 @@ const AssignedList: React.FC = () => {
       render: (row) => (
         <>
           <span className="text-gray-700">{row.name}</span>
-          <div className="text-xs text-gray-400">(-)</div>
         </>
       ),
     },
@@ -85,7 +86,10 @@ const AssignedList: React.FC = () => {
       header: "Order Number",
       accessor: "orderNumber",
       render: (row) => (
-        <span className="text-blue-600 hover:underline cursor-pointer">
+        <span 
+          onClick={() => navigate(`/drivers/trip-details/${row.bookingId}`)}
+          className="text-blue-600 hover:underline cursor-pointer font-semibold"
+        >
           {row.orderNumber}
         </span>
       ),
