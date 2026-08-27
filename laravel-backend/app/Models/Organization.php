@@ -23,10 +23,15 @@ class Organization extends Model
         'drop_location',
         'billing_address',
         'tax_number',
+        'allow_tax',
         'billing_contact_name',
         'billing_contact_email',
         'billing_contact_phone',
         'status',
+    ];
+
+    protected $casts = [
+        'allow_tax' => 'boolean',
     ];
 
     protected static function booted()

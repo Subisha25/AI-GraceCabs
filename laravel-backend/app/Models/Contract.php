@@ -9,6 +9,7 @@ class Contract extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $appends = ['actual_service_days'];
 
     protected $fillable = [
         'id',
@@ -58,5 +59,106 @@ class Contract extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function stops()
+    {
+        return $this->hasMany(ContractStop::class)->orderBy('sequence', 'asc');
+    }
+
+    public function contractTaxes()
+    {
+        return $this->hasMany(ContractTax::class);
+    }
+
+    public function getActualServiceDaysAttribute()
+    {
+        return self::calculateServiceDaysCount($this->start_date, $this->end_date, $this->service_days);
+    }
+
+    public static function calculateServiceDaysCount($startDate, $endDate, $serviceDaysStr)
+    {
+        if (!$startDate || !$endDate || !$serviceDaysStr) {
+            return 0;
+        }
+
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+
+        if ($start->gt($end)) {
+            return 0;
+        }
+
+        $dayMap = [
+            'monday'    => 1, 'mon' => 1,
+            'tuesday'   => 2, 'tue' => 2,
+            'wednesday' => 3, 'wed' => 3,
+            'thursday'  => 4, 'thu' => 4,
+            'friday'    => 5, 'fri' => 5,
+            'saturday'  => 6, 'sat' => 6,
+            'sunday'    => 7, 'sun' => 7,
+        ];
+
+        $allowedDays = [];
+        $serviceDaysStr = strtolower(trim($serviceDaysStr));
+
+        if (str_contains($serviceDaysStr, '-')) {
+            $parts = explode('-', $serviceDaysStr);
+            if (count($parts) === 2) {
+                $startDayNum = $dayMap[trim($parts[0])] ?? null;
+                $endDayNum = $dayMap[trim($parts[1])] ?? null;
+
+                if ($startDayNum !== null && $endDayNum !== null) {
+                    if ($startDayNum <= $endDayNum) {
+                        for ($d = $startDayNum; $d <= $endDayNum; $d++) {
+                            $allowedDays[] = $d;
+                        }
+                    } else {
+                        for ($d = $startDayNum; $d <= 7; $d++) {
+                            $allowedDays[] = $d;
+                        }
+                        for ($d = 1; $d <= $endDayNum; $d++) {
+                            $allowedDays[] = $d;
+                        }
+                    }
+                }
+            }
+        } else {
+            $normalized = str_replace([' ', ';'], ',', $serviceDaysStr);
+            $parts = explode(',', $normalized);
+            foreach ($parts as $p) {
+                $p = trim($p);
+                if (isset($dayMap[$p])) {
+                    $allowedDays[] = $dayMap[$p];
+                }
+            }
+        }
+
+        $allowedDays = array_unique($allowedDays);
+        if (empty($allowedDays)) {
+            $allowedDays = [1, 2, 3, 4, 5];
+        }
+
+        $count = 0;
+        $current = $start->copy();
+        while ($current->lte($end)) {
+            $isoDay = $current->dayOfWeek === 0 ? 7 : $current->dayOfWeek;
+            if (in_array($isoDay, $allowedDays)) {
+                $count++;
+            }
+            $current->addDay();
+        }
+
+        return $count;
     }
 }

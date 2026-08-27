@@ -18,7 +18,10 @@ type Company = {
   email: string;
   phone: string;
   address: string;
+  pickupLocation: string;
+  dropLocation: string;
   status: string;
+  activeContract: string;
 };
 
 const ListCompany: React.FC = () => {
@@ -45,7 +48,10 @@ const ListCompany: React.FC = () => {
         email: item.email,
         phone: item.phone,
         address: item.address,
+        pickupLocation: item.pickup_location || '—',
+        dropLocation: item.drop_location || '—',
         status: item.status || 'active',
+        activeContract: (item.contracts || []).some((c: any) => c.status.toLowerCase() === 'active') ? 'Yes' : 'No',
       }));
       setCompanies(list);
     } catch (error) {
@@ -84,6 +90,10 @@ const ListCompany: React.FC = () => {
 
     setFilteredCompanies(result);
   }, [companies, showTrashed, searchKeyword]);
+
+  const handleView = (company: Company) => {
+    navigate(`/organizations/${company.companyId}`);
+  };
 
   /** Edit */
   const handleEdit = (company: Company) => {
@@ -138,11 +148,14 @@ const ListCompany: React.FC = () => {
   /** Columns for DataTable */
   const columns: Column<Company>[] = [
     { header: "Organization Name", accessor: "companyName" },
-    { header: "Type", accessor: "type" },
+    { header: "Organization Type", accessor: "type" },
     { header: "Contact Person", accessor: "contactPerson" },
+    { header: "Mobile", accessor: "phone" },
     { header: "Email", accessor: "email" },
-    { header: "Phone", accessor: "phone" },
-    { header: "Status", accessor: "status" },
+    { header: "Pickup Location", accessor: "pickupLocation" },
+    { header: "Drop Location", accessor: "dropLocation" },
+    { header: "Active Status", accessor: "status" },
+    { header: "Active Contract", accessor: "activeContract" },
   ];
 
   return (
@@ -172,6 +185,7 @@ const ListCompany: React.FC = () => {
             columns={columns}
             data={filteredCompanies}
             loading={loading}
+            onView={handleView}
             onEdit={!showTrashed ? handleEdit : undefined}
             onDelete={!showTrashed ? handleDelete : undefined}
             onRestore={showTrashed ? handleActivate : undefined}

@@ -10,6 +10,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\TaxController;
 
 // ── PUBLIC AUTHENTICATION & GUEST RIDE ROUTES ────────────────────────────────
 Route::post('/auth/register',   [AuthController::class, 'register']);
@@ -56,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Organizations CRUD
         Route::apiResource('organizations', OrganizationController::class);
 
+        // Taxes CRUD
+        Route::apiResource('taxes', TaxController::class);
+
         // Admin customer / user compatibility routes
         Route::get('/user/customers',             [AuthController::class, 'getCustomers']);
         Route::get('/user/customers/{id}',        [AuthController::class, 'showCustomer']);
@@ -65,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Invoices & Payments (Admin actions)
         Route::post('/invoices/generate-monthly', [InvoiceController::class, 'generateMonthly']);
         Route::post('/payments/{id}/confirm-cash', [InvoiceController::class, 'confirmCash']);
+        Route::post('/contracts/{id}/generate-schedule', [ContractController::class, 'generateSchedule']);
     });
 
     // Contracts CRUD (Scoping done at controller level)

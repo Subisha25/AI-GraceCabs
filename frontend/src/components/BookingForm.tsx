@@ -35,6 +35,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
   const token = localStorage.getItem('token');
   const isAdmin = mode === 'admin';
 
+  // Read URL query parameters
+  const queryParams = new URLSearchParams(window.location.search);
+  const urlOrgId = queryParams.get('orgId') || '';
+  const urlContractId = queryParams.get('contractId') || '';
+
   // State
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
   const [selectedVehicleType, setSelectedVehicleType] = useState('');
@@ -54,6 +59,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
   const [vehicleId, setVehicleId] = useState('');
   const [passengerCount, setPassengerCount] = useState('1');
   const [remarks, setRemarks] = useState('');
+
+  // Contract-Aware states
+  const [contractInfo, setContractInfo] = useState<any>(null);
+  const [organizationId, setOrganizationId] = useState(urlOrgId);
+  const [contractId, setContractId] = useState(urlContractId);
 
   // Estimation
   const [fareMap, setFareMap] = useState<Record<string, { distance: number; fare: number }>>({});
@@ -79,6 +89,28 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
       })
       .finally(() => setTypesLoading(false));
   }, [token, navigate]);
+
+  // Fetch contract details if contractId is provided
+  useEffect(() => {
+    if (urlContractId) {
+      axiosInstance.get(`/contracts/${urlContractId}`)
+        .then((res) => {
+          const c = res.data?.data;
+          if (c) {
+            setContractInfo(c);
+            setPickupLocation(c.pickup_location || '');
+            setDropLocation(c.drop_location || '');
+            setCustomerName(c.organization?.contact_person || '');
+            setCustomerMobile(c.organization?.phone || '');
+            setOrganizationId(c.organization_id);
+            if (c.vehicle) {
+              setSelectedVehicleType(c.vehicle.vehicle_type || '');
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [urlContractId]);
 
   // Reusable function to fetch range-filtered available physical vehicles
   const fetchAvailableVehicles = () => {
@@ -193,7 +225,9 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
         vehicle_id: vehicleId,
         passenger_count: parseInt(passengerCount),
         trip_type: 'one_way',
-        customer_notes: remarks || null
+        customer_notes: remarks || null,
+        organization_id: organizationId || null,
+        contract_id: contractId || null
       };
 
       if (isAdmin) {
@@ -244,6 +278,20 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
             <p className="text-sm text-gray-500 mt-0.5">Enter trip details and pick a vehicle option below</p>
           </div>
         </div>
+
+        {contractInfo && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-800 flex items-center justify-between shadow-sm">
+            <div>
+              <span className="font-bold block">Contract Booking Mode</span>
+              <span>
+                Organization: <strong>{contractInfo.organization?.name}</strong> | Contract: <strong>{contractInfo.contract_name}</strong>
+              </span>
+            </div>
+            <span className="px-3 py-1 bg-blue-600 text-white font-extrabold text-xs rounded-lg uppercase tracking-wider">
+              Contract Active
+            </span>
+          </div>
+        )}
 
         <form onSubmit={handleOpenReview} className="space-y-5">
 

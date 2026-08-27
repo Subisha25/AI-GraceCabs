@@ -12,7 +12,7 @@ class OrganizationController extends Controller
     public function index(Request $request)
     {
         $operatorId = $request->user()->operator_id;
-        $orgs = Organization::where('operator_id', $operatorId)->get();
+        $orgs = Organization::where('operator_id', $operatorId)->with('contracts')->get();
 
         return response()->json([
             'success' => true,
@@ -39,7 +39,16 @@ class OrganizationController extends Controller
     public function show(Request $request, $id)
     {
         $operatorId = $request->user()->operator_id;
-        $org = Organization::where('operator_id', $operatorId)->where('id', $id)->first();
+        $org = Organization::where('operator_id', $operatorId)
+            ->where('id', $id)
+            ->with([
+                'contracts.vehicle',
+                'bookings.vehicle',
+                'bookings.driver',
+                'invoices.payments',
+                'invoices.contract'
+            ])
+            ->first();
 
         if (!$org) {
             return response()->json([

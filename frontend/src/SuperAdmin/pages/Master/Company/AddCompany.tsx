@@ -28,6 +28,7 @@ export default function AddCompany() {
     address: "",
     billing_address: "",
     tax_number: "",
+    allow_tax: true,
     billing_contact_name: "",
     billing_contact_email: "",
     billing_contact_phone: "",
@@ -229,6 +230,20 @@ export default function AddCompany() {
                     className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="allow_tax"
+                  name="allow_tax"
+                  checked={form.allow_tax}
+                  onChange={(e) => setForm(prev => ({ ...prev, allow_tax: e.target.checked }))}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="allow_tax" className="text-sm font-bold text-gray-700 cursor-pointer select-none">
+                  Allow Tax Management
+                </label>
               </div>
             </div>
 

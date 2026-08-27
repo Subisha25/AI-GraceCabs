@@ -35,6 +35,14 @@ class ContractRequest extends FormRequest
             'billing_contact' => 'nullable|string|max:191',
             'billing_email' => 'nullable|email|max:191',
             'status' => 'required|string|in:draft,active,expired,cancelled,DRAFT,ACTIVE,EXPIRED,CANCELLED',
+            'stops' => 'nullable|array',
+            'stops.*.stop_name' => 'required_with:stops|string|max:191',
+            'stops.*.address' => 'required_with:stops|string|max:500',
+            'stops.*.latitude' => 'nullable|numeric',
+            'stops.*.longitude' => 'nullable|numeric',
+            'stops.*.sequence' => 'nullable|integer',
+            'taxes' => 'nullable|array',
+            'taxes.*' => 'uuid|exists:taxes,id',
         ];
     }
 }

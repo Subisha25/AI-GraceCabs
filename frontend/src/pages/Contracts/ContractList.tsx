@@ -5,7 +5,7 @@ import { showToast } from '../../components/AlertBox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, faSearch, faHandshake, faSpinner, faBuilding, 
-  faToggleOn, faToggleOff, faEdit, faCalendarAlt 
+  faToggleOn, faToggleOff, faEdit, faCalendarAlt, faEye
 } from '@fortawesome/free-solid-svg-icons';
 
 interface Contract {
@@ -16,6 +16,7 @@ interface Contract {
   pricingModel: string;
   vehicleType: string;
   workingDays: number;
+  serviceDays: string;
   contractFrom: string;
   contractTo: string;
   status: string;
@@ -43,8 +44,9 @@ const ContractList: React.FC = () => {
           organizationId: c.organization_id,
           organizationName: c.organization?.name || '—',
           pricingModel: c.pricing_model || 'PER_KM',
-          vehicleType: c.vehicle?.vehicle_name || '—',
-          workingDays: c.working_days || 0,
+          vehicleType: c.vehicle?.vehicle_type || c.vehicle?.vehicle_name || '—',
+          workingDays: c.actual_service_days || 0,
+          serviceDays: c.service_days || '—',
           contractFrom: c.start_date,
           contractTo: c.end_date,
           status: c.status || 'draft',
@@ -84,7 +86,7 @@ const ContractList: React.FC = () => {
   }, [search, statusFilter, contracts]);
 
   const handleStatusToggle = async (c: Contract) => {
-    const nextStatus = c.status.toLowerCase() === 'active' ? 'cancelled' : 'active';
+    const nextStatus = c.status.toLowerCase() === 'active' ? 'draft' : 'active';
     const confirmMsg = `Are you sure you want to change the contract status to ${nextStatus.toUpperCase()}?`;
     if (!window.confirm(confirmMsg)) return;
 
@@ -210,13 +212,18 @@ const ContractList: React.FC = () => {
                       </span>
                       <span className="text-xs text-gray-400 block mt-1">{c.vehicleType}</span>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap text-xs">
-                      <span className="flex items-center gap-1">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
-                        {new Date(c.contractFrom).toLocaleDateString('en-IN')} to {new Date(c.contractTo).toLocaleDateString('en-IN')}
-                      </span>
+                    <td className="px-6 py-4 text-gray-600 text-xs">
+                      <div className="space-y-0.5">
+                        <span className="flex items-center gap-1 font-semibold">
+                          <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+                          {new Date(c.contractFrom).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} to {new Date(c.contractTo).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                        <span className="text-[10px] text-gray-400 block ml-5">Days: {c.serviceDays}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 font-bold">{c.workingDays} days</td>
+                    <td className="px-6 py-4 text-gray-600">
+                      <span className="font-bold text-gray-800">{c.workingDays} days</span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(c.status)}`}>
                         {c.status}
@@ -232,6 +239,14 @@ const ContractList: React.FC = () => {
                           <FontAwesomeIcon icon={c.status.toLowerCase() === 'active' ? faToggleOn : faToggleOff} className={c.status.toLowerCase() === 'active' ? 'text-green-600' : 'text-gray-400'} />
                         </button>
                         
+                        <button
+                          onClick={() => navigate(`/contracts/${c.id}`)}
+                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                          title="View Details"
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
+
                         <button
                           onClick={() => navigate(`/contracts/edit/${c.id}`)}
                           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"

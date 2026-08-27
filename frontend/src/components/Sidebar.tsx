@@ -8,7 +8,7 @@ import {
   faCarAlt, faMoneyBillWave, faCheckCircle,
   faCalendarAlt, faFileLines, faCog, faHandshake,
   faIdCard, faRoute, faUserShield, faLayerGroup,
-  faCreditCard, faSignOutAlt, faCalculator
+  faCreditCard, faSignOutAlt, faCalculator, faPercent
 } from '@fortawesome/free-solid-svg-icons';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -31,13 +31,30 @@ const superadminMenu: MenuItem[] = [
     path: '/dashboard',
   },
 
+  // ── CUSTOMERS ─────────────────────────────────
+  {
+    label: 'Customers',
+    icon: faUsers,
+    path: '/customers',
+  },
+
   // ── BOOKINGS ──────────────────────────────────
   {
     label: 'Bookings',
     icon: faClipboardList,
     children: [
-      { label: 'New Booking',   path: '/bookings/add',  icon: faPlus },
       { label: 'All Bookings',  path: '/bookings',       icon: faList },
+      { label: 'Add Booking',   path: '/bookings/add',  icon: faPlus },
+    ]
+  },
+
+  // ── FLEET ─────────────────────────────────────
+  {
+    label: 'Fleet',
+    icon: faCar,
+    children: [
+      { label: 'Vehicles', path: '/fleet/vehicles', icon: faList },
+      { label: 'Drivers',  path: '/fleet/drivers',  icon: faUserShield },
     ]
   },
 
@@ -46,27 +63,8 @@ const superadminMenu: MenuItem[] = [
     label: 'Organizations',
     icon: faBuilding,
     children: [
-      { label: 'All Organizations', path: '/organizations',      icon: faList },
+      { label: 'Organizations',     path: '/organizations',      icon: faList },
       { label: 'Add Organization',  path: '/organizations/add',  icon: faPlus },
-      { label: 'Org Users',         path: '/organizations/users',  icon: faUsers },
-      { label: 'Add Org User',      path: '/organizations/users/add', icon: faUserTie },
-    ]
-  },
-
-  // ── VEHICLES ──────────────────────────────────
-  {
-    label: 'Vehicles',
-    icon: faCar,
-    path: '/fleet/vehicles',
-  },
-
-  // ── DRIVERS ───────────────────────────────────
-  {
-    label: 'Drivers',
-    icon: faUserShield,
-    children: [
-      { label: 'All Drivers', path: '/fleet/drivers',     icon: faList },
-      { label: 'Add Driver',  path: '/fleet/drivers/add', icon: faPlus },
     ]
   },
 
@@ -75,25 +73,30 @@ const superadminMenu: MenuItem[] = [
     label: 'Contracts',
     icon: faHandshake,
     children: [
-      { label: 'All Contracts', path: '/contracts',     icon: faList },
-      { label: 'Add Contract',  path: '/contracts/add',  icon: faPlus },
+      { label: 'Contracts',         path: '/contracts',          icon: faList },
+      { label: 'Add Contract',      path: '/contracts/add',      icon: faPlus },
+      { label: 'Contract Bookings', path: '/contracts/bookings', icon: faClipboardList },
     ]
   },
 
-  // ── MONTHLY BILLING ───────────────────────────
+  // ── BILLING ───────────────────────────────────
   {
-    label: 'Monthly Billing',
-    icon: faCalculator,
-    path: '/admin/monthly-billing',
-  },
-
-  // ── INVOICES & PAYMENTS ───────────────────────
-  {
-    label: 'Invoices & Payments',
+    label: 'Billing',
     icon: faFileInvoice,
     children: [
-      { label: 'Invoices Ledger',   path: '/invoices',  icon: faList },
-      { label: 'Payments History',  path: '/payments',  icon: faCreditCard },
+      { label: 'Monthly Billing', path: '/admin/monthly-billing', icon: faCalculator },
+      { label: 'Invoices',        path: '/invoices',               icon: faList },
+      { label: 'Payments',        path: '/payments',               icon: faCreditCard },
+    ]
+  },
+
+  // ── TAX MANAGEMENT ────────────────────────────
+  {
+    label: 'Tax Management',
+    icon: faPercent,
+    children: [
+      { label: 'Tax List', path: '/taxes', icon: faList },
+      { label: 'Add Tax',  path: '/taxes/add', icon: faPlus },
     ]
   },
 

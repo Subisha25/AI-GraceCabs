@@ -66,8 +66,8 @@ class BookingController extends Controller
             $operatorId = $user->operator_id;
             if (in_array($user->role, ['superadmin', 'admin', 'accountant'])) {
                 $userId = null;
-                $orgId = null;
-                $bookingType = 'individual';
+                $orgId = $request->organization_id ?: null;
+                $bookingType = $orgId ? 'organization' : 'individual';
                 $customerName = $request->customer_name;
                 $customerMobile = $request->customer_mobile;
             } else {
@@ -81,8 +81,8 @@ class BookingController extends Controller
             $operator = \App\Models\Operator::first();
             $operatorId = $operator ? $operator->id : null;
             $userId = null;
-            $orgId = null;
-            $bookingType = 'individual';
+            $orgId = $request->organization_id ?: null;
+            $bookingType = $orgId ? 'organization' : 'individual';
             $customerName = $request->customer_name;
             $customerMobile = $request->customer_mobile;
         }
@@ -166,6 +166,7 @@ class BookingController extends Controller
             'customer_name' => $customerName,
             'customer_mobile' => $customerMobile,
             'organization_id' => $orgId,
+            'contract_id' => $request->contract_id ?: null,
             'vehicle_id' => $vehicle->id,
             'booking_code' => $bookingCode,
             'booking_type' => $bookingType,
@@ -250,7 +251,7 @@ class BookingController extends Controller
             $query->where('vehicle_id', $request->vehicle_id);
         }
 
-        $bookings = $query->with(['customer', 'vehicle', 'driver', 'organization'])->get();
+        $bookings = $query->with(['customer', 'vehicle', 'driver', 'organization', 'contract'])->get();
 
         return response()->json([
             'success' => true,
@@ -442,10 +443,10 @@ class BookingController extends Controller
             ], 404);
         }
 
-        if (!in_array($booking->status, ['accepted', 'confirmed'])) {
+        if (!in_array($booking->status, ['pending', 'accepted', 'confirmed', 'scheduled'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Booking status must be accepted or confirmed to assign driver. Current status: ' . $booking->status
+                'message' => 'Booking status must be pending, accepted, confirmed, or scheduled to assign driver. Current status: ' . $booking->status
             ], 422);
         }
 
@@ -493,7 +494,7 @@ class BookingController extends Controller
         if ($overlappingDriver) {
             return response()->json([
                 'success' => false,
-                'message' => 'This driver is already assigned to another trip during the selected time.'
+                'message' => 'Driver is unavailable for this time period.'
             ], 422);
         }
 

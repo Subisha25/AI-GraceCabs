@@ -24,6 +24,8 @@ class CreateBookingRequest extends FormRequest
             'passenger_count' => 'required|integer|min:1',
             'trip_type' => 'required|string|in:one_way,round_trip',
             'customer_notes' => 'nullable|string',
+            'contract_id' => 'nullable|uuid|exists:contracts,id',
+            'organization_id' => 'nullable|uuid|exists:organizations,id',
         ];
 
         $user = auth('sanctum')->user();

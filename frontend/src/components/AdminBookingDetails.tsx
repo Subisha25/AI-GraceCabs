@@ -296,10 +296,10 @@ const AdminBookingDetails: React.FC = () => {
           </div>
         )}
 
-        {(booking.status === 'accepted' || booking.status === 'confirmed') && (
+        {(booking.status === 'pending' || booking.status === 'accepted' || booking.status === 'confirmed') && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 space-y-4">
             <h3 className="font-bold text-blue-900 text-lg">
-              {booking.status === 'accepted' ? 'Assign Driver' : 'Update Driver Assignment'}
+              {['pending', 'accepted'].includes(booking.status.toLowerCase()) ? 'Assign Driver' : 'Update Driver Assignment'}
             </h3>
             
             {/* Read-Only Vehicle Info */}
@@ -346,7 +346,7 @@ const AdminBookingDetails: React.FC = () => {
                 disabled={assigning}
                 className="w-full py-3.5 bg-[#1B4F8A] hover:bg-blue-800 text-white font-bold rounded-xl shadow-md transition-all text-sm"
               >
-                {assigning ? 'Assigning...' : booking.status === 'accepted' ? 'Assign Driver' : 'Update Driver'}
+                {assigning ? 'Assigning...' : ['pending', 'accepted'].includes(booking.status.toLowerCase()) ? 'Assign Driver' : 'Update Driver'}
               </button>
             </div>
           </div>

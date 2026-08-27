@@ -35,6 +35,11 @@ class Invoice extends Model
         'extra_hours',
         'rate_applied',
         'generated_at',
+        'tax_details',
+    ];
+
+    protected $casts = [
+        'tax_details' => 'array',
     ];
 
     protected static function booted()

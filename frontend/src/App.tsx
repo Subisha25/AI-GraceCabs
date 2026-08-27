@@ -13,8 +13,8 @@ import AdminBookingDetails from './components/AdminBookingDetails';
 import Dashboard from './SuperAdmin/pages/Dashboard/Dashboard';
 
 // Master
-import AddTax from './SuperAdmin/pages/Master/Tax/AddTax';
-import ListTax from './SuperAdmin/pages/Master/Tax/ListTax';
+import AddTax from './pages/Taxes/AddTax';
+import TaxList from './pages/Taxes/TaxList';
 import AddPickupCity from './SuperAdmin/pages/Master/PickupCity/AddPickupCity';
 import ListPickupCity from './SuperAdmin/pages/Master/PickupCity/ListPickupCity';
 import PickupAreaAdd from './SuperAdmin/pages/Master/PickupArea/PickupAreaAdd';
@@ -147,8 +147,11 @@ import CustomerDetails from './pages/Customers/CustomerDetails';
 import AddCustomer from './pages/Customers/AddCustomer';
 import OrgUserList from './pages/Organizations/OrgUserList';
 import AddOrgUser from './pages/Organizations/AddOrgUser';
+import OrganizationDetails from './pages/Organizations/OrganizationDetails';
 import ContractList from './pages/Contracts/ContractList';
 import AddContract from './pages/Contracts/AddContract';
+import ContractDetails from './pages/Contracts/ContractDetails';
+import ContractBookings from './pages/Contracts/ContractBookings';
 import ScheduleList from './pages/Schedules/ScheduleList';
 import AddSchedule from './pages/Schedules/AddSchedule';
 import InvoiceList from './pages/Invoices/InvoiceList';
@@ -169,6 +172,7 @@ import CustomerInvoices from './pages/Customer/Invoices';
 import CustomerInvoiceDetails from './pages/Customer/InvoiceDetails';
 import MonthlyBillingList from './pages/MonthlyBilling/MonthlyBillingList';
 import OrgDashboard from './pages/Customer/OrgDashboard';
+import ListTax from './SuperAdmin/pages/Master/Tax/ListTax';
 
 const Layout = () => {
   const role = localStorage.getItem("role");
@@ -351,10 +355,15 @@ const Layout = () => {
           {/* Organizations — existing pages */}
           <Route path="/organizations" element={<ListCompany />} />
           <Route path="/organizations/add" element={<AddCompany />} />
+          <Route path="/organizations/:id" element={<OrganizationDetails />} />
 
           {/* Organization Users — new pages */}
           <Route path="/organizations/users" element={<OrgUserList />} />
           <Route path="/organizations/users/add" element={<AddOrgUser />} />
+
+          {/* Taxes */}
+          <Route path="/taxes" element={<TaxList />} />
+          <Route path="/taxes/add" element={<AddTax />} />
 
           {/* Customers — new pages */}
           <Route path="/customers" element={<CustomerList />} />
@@ -368,6 +377,8 @@ const Layout = () => {
           {/* Contracts — new pages */}
           <Route path="/contracts" element={<ContractList />} />
           <Route path="/contracts/add" element={<AddContract />} />
+          <Route path="/contracts/bookings" element={<ContractBookings />} />
+          <Route path="/contracts/:id" element={<ContractDetails />} />
           <Route path="/admin/monthly-billing" element={<MonthlyBillingList />} />
           <Route path="/organization/dashboard" element={<OrgDashboard />} />
 

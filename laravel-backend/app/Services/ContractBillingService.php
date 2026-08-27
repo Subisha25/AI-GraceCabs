@@ -104,13 +104,39 @@ class ContractBillingService
             $baseAmount = $contract->monthly_fixed_amount ?? 0.00;
         }
 
-        // 6. Apply dynamic tax rate (defaults to 0.0% if not set)
-        $taxPercent = $contract->tax_rate_percent ?? 0.00;
-        $taxAmount = round(($baseAmount * $taxPercent) / 100, 2);
+        // 6. Calculate dynamic taxes based on locked contract_taxes
+        $taxAmount = 0.00;
+        $taxDetails = [];
+        $selectedTaxes = $contract->contractTaxes;
+
+        if ($selectedTaxes && $selectedTaxes->count() > 0) {
+            foreach ($selectedTaxes as $cTax) {
+                $percentage = floatval($cTax->percentage);
+                $calculated = round(($baseAmount * $percentage) / 100, 2);
+                $taxAmount += $calculated;
+                $taxDetails[] = [
+                    'tax_name' => $cTax->tax_name,
+                    'tax_type' => $cTax->tax_type,
+                    'percentage' => $percentage,
+                    'amount' => $calculated,
+                ];
+            }
+        } else {
+            $taxPercent = $contract->tax_rate_percent ?? 0.00;
+            if ($taxPercent > 0) {
+                $taxAmount = round(($baseAmount * $taxPercent) / 100, 2);
+                $taxDetails[] = [
+                    'tax_name' => 'Tax',
+                    'tax_type' => 'GST',
+                    'percentage' => floatval($taxPercent),
+                    'amount' => $taxAmount,
+                ];
+            }
+        }
         $totalAmount = $baseAmount + $taxAmount;
 
         // 7. Transaction block to create invoice with sequential naming locking
-        $invoice = DB::transaction(function() use ($operatorId, $organizationId, $contractId, $billingPeriod, $totalTrips, $totalKm, $totalHours, $baseAmount, $taxAmount, $totalAmount, $rateApplied, $contract) {
+        $invoice = DB::transaction(function() use ($operatorId, $organizationId, $contractId, $billingPeriod, $totalTrips, $totalKm, $totalHours, $baseAmount, $taxAmount, $totalAmount, $rateApplied, $contract, $taxDetails) {
             
             // Generate sequential code: INV-YYYY-000001
             $year = date('Y');
@@ -147,6 +173,7 @@ class ContractBillingService
                 'total_hours' => $totalHours,
                 'base_amount' => $baseAmount,
                 'rate_applied' => $rateApplied,
+                'tax_details' => $taxDetails,
                 'generated_at' => now(),
             ]);
         });
