@@ -76,7 +76,7 @@ const ContractBookings: React.FC = () => {
       setBookings(contractOnly);
       setFiltered(contractOnly);
     } catch (err: any) {
-      showToast('Failed to load contract bookings', 'error');
+      showToast('Failed to load monthly bookings', 'error');
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ const ContractBookings: React.FC = () => {
           <div>
             <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
               <FontAwesomeIcon icon={faClipboardList} className="text-[#1B4F8A]" />
-              Contract Bookings
+              Monthly Bookings
             </h1>
             <p className="text-sm text-gray-500 mt-1">Manage corporate & institutional transport schedules</p>
           </div>
@@ -174,12 +174,12 @@ const ContractBookings: React.FC = () => {
         {loading ? (
           <div className="text-center py-20">
             <FontAwesomeIcon icon={faSpinner} spin className="text-4xl text-[#1B4F8A] mb-3" />
-            <p className="text-gray-500 font-semibold">Loading contract bookings...</p>
+            <p className="text-gray-500 font-semibold">Loading monthly bookings...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-150 p-12 text-center text-gray-400">
             <FontAwesomeIcon icon={faClipboardList} className="text-5xl mb-3 text-gray-300" />
-            <p className="font-semibold text-gray-700 mb-1">No contract bookings found</p>
+            <p className="font-semibold text-gray-700 mb-1">No monthly bookings found</p>
             <p className="text-sm">Create a booking from the organization/contract details page.</p>
           </div>
         ) : (

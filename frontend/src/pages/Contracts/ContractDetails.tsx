@@ -72,6 +72,8 @@ interface Contract {
   contract_name: string;
   start_date: string;
   end_date: string;
+  pickup_location?: string;
+  drop_location?: string;
   billing_cycle: string;
   service_days: string;
   actual_service_days?: number;
@@ -267,7 +269,7 @@ const ContractDetails: React.FC = () => {
                   className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
                 >
                   <FontAwesomeIcon icon={faPlus} />
-                  <span>Add Contract Booking</span>
+                  <span>Add Monthly Booking</span>
                 </Link>
 
                 <button
@@ -279,20 +281,6 @@ const ContractDetails: React.FC = () => {
                 </button>
               </>
             )}
-
-            <button
-              onClick={() => {
-                if (contract.status.toLowerCase() !== 'active') {
-                  showToast('Contract must be ACTIVE to generate invoices.', 'warn');
-                  return;
-                }
-                setShowGenerateModal(true);
-              }}
-              className="flex-1 sm:flex-none px-4 py-2 bg-[#1B4F8A] hover:bg-blue-800 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-            >
-              <FontAwesomeIcon icon={faCalculator} />
-              <span>Generate Monthly Invoice</span>
-            </button>
           </div>
         </div>
 
@@ -394,7 +382,7 @@ const ContractDetails: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-xs text-gray-400 italic">No intermediate stops configured. Direct route:</div>
+                <div className="text-xs text-gray-400 italic">No intermediate stops configured. Direct route: {contract.pickup_location} → {contract.drop_location}</div>
               )}
             </div>
 
@@ -426,7 +414,7 @@ const ContractDetails: React.FC = () => {
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 pb-2 border-b border-gray-100">
                 <FontAwesomeIcon icon={faClipboardList} className="text-[#1B4F8A]" />
-                Contract Bookings ({bookings.length})
+                Monthly Bookings ({bookings.length})
               </h2>
 
               {bookings.length === 0 ? (

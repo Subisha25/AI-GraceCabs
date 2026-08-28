@@ -282,7 +282,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
         {contractInfo && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-800 flex items-center justify-between shadow-sm">
             <div>
-              <span className="font-bold block">Contract Booking Mode</span>
+              <span className="font-bold block">Monthly Booking Mode</span>
               <span>
                 Organization: <strong>{contractInfo.organization?.name}</strong> | Contract: <strong>{contractInfo.contract_name}</strong>
               </span>

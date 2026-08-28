@@ -75,7 +75,7 @@ const superadminMenu: MenuItem[] = [
     children: [
       { label: 'Contracts',         path: '/contracts',          icon: faList },
       { label: 'Add Contract',      path: '/contracts/add',      icon: faPlus },
-      { label: 'Contract Bookings', path: '/contracts/bookings', icon: faClipboardList },
+      { label: 'Monthly Bookings', path: '/contracts/bookings', icon: faClipboardList },
     ]
   },
 
