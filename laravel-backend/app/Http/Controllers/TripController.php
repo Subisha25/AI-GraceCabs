@@ -111,16 +111,43 @@ class TripController extends Controller
             ]);
         });
 
+        $customerName = $booking->customer ? $booking->customer->name : $booking->customer_name;
+        $vehicle = $booking->vehicle;
+        
+        $customerStartNotify = "Dear {$customerName},\n\nYour ride has started. Below are your driver and trip details:\n\n"
+            . "Booking Reference : {$booking->booking_code}\n"
+            . "Driver Name       : " . ($driver ? $driver->name : 'N/A') . "\n"
+            . "Vehicle Assigned   : " . ($vehicle ? $vehicle->vehicle_name : 'N/A') . " (Number: " . ($vehicle ? $vehicle->vehicle_number : 'N/A') . ")\n"
+            . "Pickup Location    : {$booking->pickup_location}\n"
+            . "Drop Location      : {$booking->drop_location}\n"
+            . "Start Time         : " . now()->format('Y-m-d H:i:s') . "\n\n"
+            . "You can track the live progress in your dashboard.";
+
+        $driverStartNotify = "Dear " . ($driver ? $driver->name : 'Driver') . ",\n\n"
+            . "Trip started confirmation for booking {$booking->booking_code} has been successfully logged.\n\n"
+            . "Please drive safely!";
+
         if ($booking->customer) {
             $this->notificationService->notifyUser(
                 $booking->operator_id,
                 $booking->customer,
                 'trip_started',
                 'Your Ride Has Started',
-                "Your ride {$booking->booking_code} has started. You can track the live ride progress in your panel.",
+                $customerStartNotify,
                 $booking->id
             );
         } else {
+            $this->notificationService->send(
+                $booking->operator_id,
+                null,
+                'trip_started',
+                'email',
+                'Your Ride Has Started',
+                $customerStartNotify,
+                $booking->id,
+                null,
+                $booking->customer_mobile . '@cabs.com'
+            );
             $this->notificationService->send(
                 $booking->operator_id,
                 null,
@@ -131,6 +158,31 @@ class TripController extends Controller
                 $booking->id,
                 null,
                 $booking->customer_mobile
+            );
+        }
+
+        // Notify Driver
+        $driverUser = $driver ? \App\Models\User::where('mobile', $driver->mobile)->first() : null;
+        if ($driverUser) {
+            $this->notificationService->notifyUser(
+                $booking->operator_id,
+                $driverUser,
+                'trip_started',
+                'Trip Started Confirmed',
+                $driverStartNotify,
+                $booking->id
+            );
+        } else if ($driver) {
+            $this->notificationService->send(
+                $booking->operator_id,
+                null,
+                'trip_started',
+                'email',
+                'Trip Started Confirmed',
+                $driverStartNotify,
+                $booking->id,
+                null,
+                $driver->mobile . '@driver.gracecabs.com'
             );
         }
 
@@ -250,9 +302,10 @@ class TripController extends Controller
         // Calculate final fare using backend Fare Calculation Service
         $pricePerKm = $booking->vehicle ? $booking->vehicle->price_per_km : 20.00;
         $finalFare = $this->fareService->calculateFare($actualDistance, floatval($pricePerKm));
+        $tax = $this->fareService->calculateTax($finalFare);
 
         $invoice = null;
-        DB::transaction(function() use ($booking, $trip, $request, $actualDistance, $durationSeconds, $completedAt, $finalFare, &$invoice) {
+        DB::transaction(function() use ($booking, $trip, $request, $actualDistance, $durationSeconds, $completedAt, $finalFare, $tax, &$invoice) {
             $trip->update([
                 'status' => 'completed',
                 'completed_at' => $completedAt,
@@ -283,7 +336,6 @@ class TripController extends Controller
                 }
             }
             $invoiceNumber = 'INV-' . $year . '-' . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
-            $tax = $this->fareService->calculateTax($finalFare);
             $totalAmount = $finalFare + $tax;
 
             $invoice = Invoice::create([
@@ -299,6 +351,50 @@ class TripController extends Controller
             ]);
         });
 
+        // Generate and save PDF first
+        $pdfPath = null;
+        try {
+            $pdfService = app(\App\Services\InvoicePdfService::class);
+            $pdfPath = $pdfService->savePdf($invoice);
+        $invoice->update(['pdf_path' => $pdfPath]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to generate/save PDF invoice: " . $e->getMessage());
+        }
+
+        // Build detailed email message
+        $tripDurationFormatted = gmdate("H:i:s", $durationSeconds);
+        $pricePerKm = $booking->vehicle ? $booking->vehicle->price_per_km : 20.00;
+        $customerName = $booking->customer ? $booking->customer->name : $booking->customer_name;
+        $customerMobile = $booking->customer ? $booking->customer->mobile : $booking->customer_mobile;
+        $vehicleName = $booking->vehicle ? $booking->vehicle->vehicle_name : 'N/A';
+        $driverName = $booking->driver ? $booking->driver->name : 'N/A';
+        
+        $detailedMessage = "Dear {$customerName},\n\n"
+            . "Your ride has been completed successfully. Below is your detailed trip and billing summary:\n\n"
+            . "--------------------------------------------------\n"
+            . "TRIP & VEHICLE INFORMATION\n"
+            . "--------------------------------------------------\n"
+            . "Booking Reference : {$booking->booking_code}\n"
+            . "Invoice Number     : {$invoice->invoice_number}\n"
+            . "Vehicle Assigned   : {$vehicleName} (Number: " . ($booking->vehicle ? $booking->vehicle->vehicle_number : 'N/A') . ")\n"
+            . "Driver Assigned    : {$driverName}\n"
+            . "Pickup Location    : {$booking->pickup_location}\n"
+            . "Drop Location      : {$booking->drop_location}\n"
+            . "Start Time         : " . ($booking->started_at ? \Carbon\Carbon::parse($booking->started_at)->format('Y-m-d H:i:s') : 'N/A') . "\n"
+            . "End Time           : " . ($completedAt ? \Carbon\Carbon::parse($completedAt)->format('Y-m-d H:i:s') : 'N/A') . "\n"
+            . "Trip Duration      : {$tripDurationFormatted}\n\n"
+            . "--------------------------------------------------\n"
+            . "FARE & BILLING BREAKDOWN\n"
+            . "--------------------------------------------------\n"
+            . "Actual Distance    : " . number_format($actualDistance, 2) . " KM\n"
+            . "Rate per KM        : ₹" . number_format($pricePerKm, 2) . "\n"
+            . "Base Fare          : ₹" . number_format($finalFare, 2) . "\n"
+            . "Taxes (CGST/SGST)  : ₹" . number_format($tax, 2) . "\n"
+            . "Total Amount Due   : ₹" . number_format($invoice->total_amount, 2) . "\n"
+            . "Payment Status     : " . strtoupper($invoice->status) . "\n\n"
+            . "The PDF copy of your invoice is attached to this email.\n\n"
+            . "Thank you for riding with Grace Cabs!";
+
         // Send completed notification
         if ($booking->customer) {
             $this->notificationService->notifyUser(
@@ -306,21 +402,36 @@ class TripController extends Controller
                 $booking->customer,
                 'trip_completed',
                 'Trip Invoice Generated',
-                "Your ride {$booking->booking_code} has ended. Total billing amount is ₹" . $invoice->total_amount,
+                $detailedMessage,
                 $booking->id,
-                $invoice->id
+                $invoice->id,
+                $pdfPath
             );
         } else {
             $this->notificationService->send(
                 $booking->operator_id,
                 null,
                 'trip_completed',
-                'sms',
+                'email',
                 'Trip Invoice Generated',
-                "Your ride {$booking->booking_code} has ended. Total billing amount is ₹" . $invoice->total_amount,
+                $detailedMessage,
                 $booking->id,
                 $invoice->id,
-                $booking->customer_mobile
+                null,
+                $customerMobile . '@cabs.com',
+                $pdfPath
+            );
+            $this->notificationService->send(
+                $booking->operator_id,
+                null,
+                'trip_completed',
+                'sms',
+                'Trip Invoice Generated',
+                "Your ride {$booking->booking_code} has ended. Invoice: {$invoice->invoice_number}. Total billing amount is ₹" . number_format($invoice->total_amount, 2),
+                $booking->id,
+                $invoice->id,
+                $booking->customer_mobile,
+                $pdfPath
             );
         }
 

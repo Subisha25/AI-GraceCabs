@@ -13,6 +13,8 @@ use App\Models\Trip;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TemplateMail;
 
 class InvoicePaymentTest extends TestCase
 {
@@ -38,6 +40,8 @@ class InvoicePaymentTest extends TestCase
 
     public function test_invoice_auto_generation_and_uniqueness()
     {
+        Mail::fake();
+
         $customer = User::create([
             'operator_id' => $this->operatorId,
             'name' => 'Subisha Customer',
@@ -116,6 +120,8 @@ class InvoicePaymentTest extends TestCase
             'booking_id' => $booking->id,
             'status' => 'payment_pending',
         ]);
+
+        Mail::assertSent(TemplateMail::class);
 
         $invoice = Invoice::where('booking_id', $booking->id)->first();
         $this->assertNotNull($invoice);
@@ -199,6 +205,8 @@ class InvoicePaymentTest extends TestCase
 
     public function test_cash_payment_flow()
     {
+        Mail::fake();
+
         $customer = User::create([
             'operator_id' => $this->operatorId,
             'name' => 'Subisha Customer',
@@ -265,6 +273,8 @@ class InvoicePaymentTest extends TestCase
         $confirmResponse->assertStatus(200);
         $this->assertEquals('success', $confirmResponse->json('data.status'));
 
+        Mail::assertSent(TemplateMail::class);
+
         // Invoice status should now be PAID
         $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'paid']);
         $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'paid']);
@@ -277,6 +287,8 @@ class InvoicePaymentTest extends TestCase
 
     public function test_online_payment_and_webhook_flow()
     {
+        Mail::fake();
+
         $customer = User::create([
             'operator_id' => $this->operatorId,
             'name' => 'Subisha Customer',
@@ -335,6 +347,8 @@ class InvoicePaymentTest extends TestCase
         ]);
 
         $webhookResponse->assertStatus(200);
+
+        Mail::assertSent(TemplateMail::class);
 
         // Verify Payment is success, Invoice is paid
         $this->assertDatabaseHas('payments', ['id' => $payment->id, 'status' => 'success']);

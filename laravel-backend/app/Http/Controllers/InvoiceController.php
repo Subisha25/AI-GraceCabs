@@ -388,15 +388,33 @@ class InvoiceController extends Controller
         });
 
         // Send payment success notification
+        $adminName = $user->name;
+        $customerName = $invoice->booking && $invoice->booking->customer ? $invoice->booking->customer->name : ($invoice->booking ? $invoice->booking->customer_name : 'Customer');
+        $cashMessage = "Dear {$customerName},\n\n"
+            . "We have received your cash payment for your ride invoice.\n\n"
+            . "--------------------------------------------------\n"
+            . "PAYMENT RECEIPT DETAILS\n"
+            . "--------------------------------------------------\n"
+            . "Invoice Number     : {$invoice->invoice_number}\n"
+            . "Amount Paid        : ₹" . number_format($invoice->total_amount, 2) . "\n"
+            . "Payment Date       : " . now()->format('Y-m-d H:i:s') . "\n"
+            . "Received By        : {$adminName}\n"
+            . "Payment Method     : CASH\n"
+            . "Payment Status     : PAID\n\n"
+            . "The PDF copy of your receipt/invoice is attached to this email.\n\n"
+            . "Thank you for choosing Grace Cabs!";
+
         $this->notificationService->send(
             $invoice->operator_id,
             $invoice->booking ? $invoice->booking->user_id : null,
             'payment_success',
             'email',
             'Payment Successful',
-            "Payment verified. Your invoice {$invoice->invoice_number} has been settled.",
+            $cashMessage,
             $invoice->booking_id,
-            $invoice->id
+            $invoice->id,
+            null,
+            $invoice->pdf_path
         );
 
         return response()->json([
@@ -462,15 +480,32 @@ class InvoiceController extends Controller
                 }
             });
 
+            $customerName = $invoice->booking && $invoice->booking->customer ? $invoice->booking->customer->name : ($invoice->booking ? $invoice->booking->customer_name : 'Customer');
+            $onlineMessage = "Dear {$customerName},\n\n"
+                . "Your online payment has been processed successfully. Below is your payment receipt:\n\n"
+                . "--------------------------------------------------\n"
+                . "PAYMENT RECEIPT DETAILS\n"
+                . "--------------------------------------------------\n"
+                . "Invoice Number     : {$invoice->invoice_number}\n"
+                . "Transaction ID     : {$payment->transaction_id}\n"
+                . "Amount Paid        : ₹" . number_format($invoice->total_amount, 2) . "\n"
+                . "Payment Date       : " . ($payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s')) . "\n"
+                . "Payment Method     : ONLINE (UPI/Card)\n"
+                . "Payment Status     : PAID\n\n"
+                . "The PDF copy of your receipt/invoice is attached to this email.\n\n"
+                . "Thank you for choosing Grace Cabs!";
+
             $this->notificationService->send(
                 $invoice->operator_id,
                 $invoice->booking ? $invoice->booking->user_id : null,
                 'payment_success',
                 'email',
                 'Payment Successful',
-                "Your payment of ₹" . $invoice->total_amount . " for invoice {$invoice->invoice_number} succeeded.",
+                $onlineMessage,
                 $invoice->booking_id,
-                $invoice->id
+                $invoice->id,
+                null,
+                $invoice->pdf_path
             );
         } else {
             DB::transaction(function() use ($payment) {
@@ -502,7 +537,7 @@ class InvoiceController extends Controller
             $query->where('operator_id', $user->operator_id);
         }
 
-        $invoice = $query->with(['booking.customer', 'booking.vehicle', 'booking.driver', 'booking.trip', 'operator'])->first();
+        $invoice = $query->with(['booking.customer', 'booking.vehicle', 'booking.driver', 'booking.trip', 'operator', 'organization', 'contract'])->first();
 
         if (!$invoice) {
             return response()->json([

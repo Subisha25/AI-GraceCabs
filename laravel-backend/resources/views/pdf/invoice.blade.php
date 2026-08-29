@@ -134,19 +134,35 @@
         <!-- Client & Trip Meta -->
         <table class="info-table">
             <tr>
-                <td style="width: 50%;">
-                    <div class="info-title">Bill To</div>
-                    <strong>{{ $invoice->booking->customer->name }}</strong><br>
-                    Mobile: {{ $invoice->booking->customer->mobile }}<br>
-                    Email: {{ $invoice->booking->customer->email }}
-                </td>
-                <td style="width: 50%;">
-                    <div class="info-title">Trip Metadata</div>
-                    <strong>Booking Ref:</strong> {{ $invoice->booking->booking_code }}<br>
-                    <strong>Date & Time:</strong> {{ date('d-m-Y', strtotime($invoice->booking->booking_date)) }} at {{ $invoice->booking->booking_time }}<br>
-                    <strong>Vehicle:</strong> {{ $invoice->booking->vehicle->vehicle_name }} ({{ $invoice->booking->vehicle->vehicle_number }})<br>
-                    <strong>Driver:</strong> {{ $invoice->booking->driver ? $invoice->booking->driver->name : 'N/A' }}
-                </td>
+                @if($invoice->invoice_type === 'contract_monthly')
+                    <td style="width: 50%;">
+                        <div class="info-title">Bill To</div>
+                        <strong>{{ $invoice->organization->name }}</strong><br>
+                        Contact: {{ $invoice->organization->contact_person }}<br>
+                        Phone: {{ $invoice->organization->billing_contact_phone ?? $invoice->organization->phone }}<br>
+                        Email: {{ $invoice->organization->billing_contact_email ?? $invoice->organization->email }}
+                    </td>
+                    <td style="width: 50%;">
+                        <div class="info-title">Agreement Metadata</div>
+                        <strong>Agreement Ref:</strong> {{ $invoice->contract->contract_name }}<br>
+                        <strong>Billing Period:</strong> {{ $invoice->billing_period }}<br>
+                        <strong>Pricing Model:</strong> {{ $invoice->contract->pricing_model }}
+                    </td>
+                @else
+                    <td style="width: 50%;">
+                        <div class="info-title">Bill To</div>
+                        <strong>{{ $invoice->booking->customer->name }}</strong><br>
+                        Mobile: {{ $invoice->booking->customer->mobile }}<br>
+                        Email: {{ $invoice->booking->customer->email }}
+                    </td>
+                    <td style="width: 50%;">
+                        <div class="info-title">Trip Metadata</div>
+                        <strong>Booking Ref:</strong> {{ $invoice->booking->booking_code }}<br>
+                        <strong>Date & Time:</strong> {{ date('d-m-Y', strtotime($invoice->booking->booking_date)) }} at {{ $invoice->booking->booking_time }}<br>
+                        <strong>Vehicle:</strong> {{ $invoice->booking->vehicle->vehicle_name }} ({{ $invoice->booking->vehicle->vehicle_number }})<br>
+                        <strong>Driver:</strong> {{ $invoice->booking->driver ? $invoice->booking->driver->name : 'N/A' }}
+                    </td>
+                @endif
             </tr>
         </table>
 
@@ -162,22 +178,45 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>
-                        <strong>Cab Rental Charges</strong><br>
-                        <span style="font-size:11px; color:#6b7280;">
-                            Pickup: {{ $invoice->booking->pickup_location }}<br>
-                            Drop: {{ $invoice->booking->drop_location }}
-                        </span>
-                    </td>
-                    <td style="text-align: right;">
-                        {{ number_format($invoice->booking->actual_distance_km ?? $invoice->booking->estimated_distance_km, 2) }} KM<br>
-                        <span style="font-size:11px; color:#6b7280;">
-                            Duration: {{ $invoice->booking->trip && $invoice->booking->trip->duration_seconds ? gmdate('H:i:s', $invoice->booking->trip->duration_seconds) : '—' }}
-                        </span>
-                    </td>
-                    <td style="text-align: right;">
-                        ₹{{ number_format($invoice->booking->vehicle->price_per_km, 2) }}/KM
-                    </td>
+                    @if($invoice->invoice_type === 'contract_monthly')
+                        <td>
+                            <strong>Monthly Fleet Operations</strong><br>
+                            <span style="font-size:11px; color:#6b7280;">
+                                Agreement: {{ $invoice->contract->contract_name }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            {{ number_format($invoice->total_km, 2) }} KM<br>
+                            <span style="font-size:11px; color:#6b7280;">
+                                Total Trips: {{ $invoice->total_trips }}<br>
+                                Total Hours: {{ $invoice->total_hours }} hrs
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            @if($invoice->contract->pricing_model === 'PER_KM')
+                                ₹{{ number_format($invoice->rate_applied, 2) }}/KM
+                            @else
+                                Fixed Monthly Rate
+                            @endif
+                        </td>
+                    @else
+                        <td>
+                            <strong>Cab Rental Charges</strong><br>
+                            <span style="font-size:11px; color:#6b7280;">
+                                Pickup: {{ $invoice->booking->pickup_location }}<br>
+                                Drop: {{ $invoice->booking->drop_location }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            {{ number_format($invoice->booking->actual_distance_km ?? $invoice->booking->estimated_distance_km, 2) }} KM<br>
+                            <span style="font-size:11px; color:#6b7280;">
+                                Duration: {{ $invoice->booking->trip && $invoice->booking->trip->duration_seconds ? gmdate('H:i:s', $invoice->booking->trip->duration_seconds) : '—' }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            ₹{{ number_format($invoice->booking->vehicle->price_per_km, 2) }}/KM
+                        </td>
+                    @endif
                     <td style="text-align: right; font-weight: bold;">
                         ₹{{ number_format($invoice->subtotal, 2) }}
                     </td>
@@ -191,10 +230,19 @@
                 <td>Subtotal:</td>
                 <td style="text-align: right;">₹{{ number_format($invoice->subtotal, 2) }}</td>
             </tr>
-            <tr>
-                <td>Tax ({{ config('billing.tax_rate', 18) }}%):</td>
-                <td style="text-align: right;">₹{{ number_format($invoice->tax_amount, 2) }}</td>
-            </tr>
+            @if(!empty($invoice->tax_details) && is_array($invoice->tax_details))
+                @foreach($invoice->tax_details as $taxItem)
+                    <tr>
+                        <td>{{ $taxItem['tax_name'] ?? 'Tax' }} ({{ floatval($taxItem['percentage'] ?? 0) }}%):</td>
+                        <td style="text-align: right;">₹{{ number_format($taxItem['amount'] ?? 0, 2) }}</td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td>Tax ({{ config('billing.tax_rate', 18) }}%):</td>
+                    <td style="text-align: right;">₹{{ number_format($invoice->tax_amount, 2) }}</td>
+                </tr>
+            @endif
             <tr class="total-row">
                 <td>Total:</td>
                 <td style="text-align: right;">₹{{ number_format($invoice->total_amount, 2) }}</td>

@@ -263,23 +263,13 @@ const ContractDetails: React.FC = () => {
 
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             {contract.status.toLowerCase() === 'active' && (
-              <>
-                <Link
-                  to={`/booking/create?orgId=${contract.organization?.id}&contractId=${contract.id}`}
-                  className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-                >
-                  <FontAwesomeIcon icon={faPlus} />
-                  <span>Add Monthly Booking</span>
-                </Link>
-
-                <button
-                  onClick={() => setShowScheduleModal(true)}
-                  className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-                >
-                  <FontAwesomeIcon icon={faCalendarAlt} />
-                  <span>Generate Monthly Schedule</span>
-                </button>
-              </>
+              <Link
+                to={`/booking/create?orgId=${contract.organization?.id}&contractId=${contract.id}`}
+                className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+              >
+                <FontAwesomeIcon icon={faPlus} />
+                <span>Add Monthly Booking</span>
+              </Link>
             )}
           </div>
         </div>

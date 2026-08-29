@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.role' => \App\Http\Middleware\AdminRole::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        $schedule->command('contracts:generate-monthly-invoices')->lastDayOfMonth('23:59');
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

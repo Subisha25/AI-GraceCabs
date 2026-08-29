@@ -43,6 +43,19 @@ class AuthController extends Controller
 
     public function sendOtp(SendOtpRequest $request)
     {
+        // 1. Resend Cooldown Check: wait 60 seconds
+        $lastOtp = Otp::where('mobile', $request->mobile)
+            ->where('purpose', $request->purpose)
+            ->where('created_at', '>', now()->subMinute())
+            ->first();
+
+        if ($lastOtp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait 60 seconds before requesting a new OTP.'
+            ], 422);
+        }
+
         // Generate random 6-digit OTP
         $otpCode = sprintf('%06d', mt_rand(100000, 999999));
         
@@ -64,21 +77,19 @@ class AuthController extends Controller
             'expires_at' => now()->addMinutes(5),
         ]);
 
-        // Send OTP via SmsProvider / WhatsApp using NotificationService
+        // Send OTP via SmsProvider using NotificationService
         $operator = Operator::first();
         $operatorId = $operator ? $operator->id : (string) Str::uuid();
         
         if (empty(env('TWO_FACTOR_API_KEY')) && !app()->environment('testing')) {
-            Log::warning("SmsProvider: TWO_FACTOR_API_KEY is missing in .env. Mocking OTP dispatch in logs.");
-            Log::info("SMS Mock (Credentials Missing): To {$request->mobile}. Message: \"Your SwiftRide verification code is: {$otpCode}. It will expire in 5 minutes.\"");
-            
+            Log::warning("SmsProvider: TWO_FACTOR_API_KEY is missing in .env.");
             return response()->json([
-                'success' => true,
-                'message' => 'OTP generated (Mock logged in server logs). SMS provider credentials missing.'
-            ]);
+                'success' => false,
+                'message' => 'SMS gateway configuration error (missing key). OTP could not be sent.'
+            ], 500);
         }
 
-        app(NotificationService::class)->send(
+        $notif = app(NotificationService::class)->send(
             $operatorId,
             null, // No user ID during registration/verification phase
             'otp',
@@ -89,6 +100,13 @@ class AuthController extends Controller
             null,
             $request->mobile
         );
+
+        if ($notif->status !== 'sent' && !app()->environment('testing')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP SMS. Please try again later.'
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -154,6 +172,20 @@ class AuthController extends Controller
                 'status' => 'active',
                 'mobile_verified_at' => now()
             ]);
+
+            // Send registration welcome email
+            try {
+                app(NotificationService::class)->send(
+                    $user->operator_id,
+                    $user->id,
+                    'registration_success',
+                    'email',
+                    'Welcome to Grace Cabs - Registration Successful!',
+                    "Dear {$user->name},\n\nYour registration with Grace Cabs is successful. You can now login to your portal and start booking rides.\n\nAccount Email: {$user->email}\nMobile: {$user->mobile}\n\nThank you for choosing Grace Cabs!"
+                );
+            } catch (\Exception $e) {
+                Log::error("Failed to send welcome registration email: " . $e->getMessage());
+            }
         }
 
         if (!$user) {

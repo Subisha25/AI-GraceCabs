@@ -184,6 +184,21 @@ class BookingController extends Controller
             'customer_notes' => $request->customer_notes,
         ]);
 
+        $bookingDetails = "Dear {$customerName},\n\n"
+            . "Your booking request has been initiated successfully. Here are your booking details:\n\n"
+            . "Booking Reference : {$bookingCode}\n"
+            . "Pickup Location    : {$request->pickup_location}\n"
+            . "Drop Location      : {$request->drop_location}\n"
+            . "Booking Date       : {$request->booking_date}\n"
+            . "Booking Time       : {$request->booking_time}\n"
+            . "Passengers         : {$request->passenger_count}\n"
+            . "Vehicle Type       : " . ($vehicle ? $vehicle->vehicle_name : 'N/A') . "\n"
+            . "Estimated Distance : " . number_format($distance, 2) . " KM\n"
+            . "Estimated Fare     : ₹" . number_format($fare, 2) . "\n"
+            . "Booking Status     : PENDING APPROVAL\n\n"
+            . "We will notify you once a driver has been assigned and the booking is confirmed.\n\n"
+            . "Thank you for choosing Grace Cabs!";
+
         // Send created notification
         if ($user) {
             $this->notificationService->notifyUser(
@@ -191,10 +206,21 @@ class BookingController extends Controller
                 $user,
                 'booking_created',
                 'Booking Request Initiated',
-                "Your booking request {$bookingCode} for {$request->pickup_location} has been created and is pending approval.",
+                $bookingDetails,
                 $booking->id
             );
         } else {
+            $this->notificationService->send(
+                $operatorId,
+                null,
+                'booking_created',
+                'email',
+                'Booking Request Initiated',
+                $bookingDetails,
+                $booking->id,
+                null,
+                $customerMobile . '@cabs.com'
+            );
             $this->notificationService->send(
                 $operatorId,
                 null,
@@ -537,11 +563,32 @@ class BookingController extends Controller
         });
 
         // 1. Notify Customer
-        $vehicleTypeName = $vehicle->vehicle_type ?? 'Standard';
+        $customerName = $booking->customer ? $booking->customer->name : $booking->customer_name;
+        $customerMobile = $booking->customer ? $booking->customer->mobile : $booking->customer_mobile;
+        
         $notifyTitle = $driverChanged ? 'Driver Assignment Updated' : 'Driver Assigned to Your Booking';
+        
         $notifyBody = $driverChanged
-            ? "Your ride {$booking->booking_code} from {$booking->pickup_location} to {$booking->drop_location} has been updated. New Driver: {$driver->name} (Mobile: {$driver->mobile}). Vehicle: {$vehicleTypeName} (Number: {$vehicle->vehicle_number})."
-            : "Driver {$driver->name} (Mobile: {$driver->mobile}) and Vehicle {$vehicleTypeName} (Number: {$vehicle->vehicle_number}) have been assigned to your ride {$booking->booking_code} from {$booking->pickup_location} to {$booking->drop_location} scheduled for {$booking->booking_date} at {$booking->booking_time}.";
+            ? "Dear {$customerName},\n\nYour driver assignment for ride {$booking->booking_code} has been updated. Here are the details:\n\n"
+                . "Booking Reference : {$booking->booking_code}\n"
+                . "New Driver Name   : {$driver->name}\n"
+                . "Driver Mobile     : {$driver->mobile}\n"
+                . "Vehicle Assigned   : {$vehicle->vehicle_name} (Number: {$vehicle->vehicle_number})\n"
+                . "Scheduled Date     : {$booking->booking_date}\n"
+                . "Scheduled Time     : {$booking->booking_time}\n"
+                . "Pickup Location    : {$booking->pickup_location}\n"
+                . "Drop Location      : {$booking->drop_location}\n\n"
+                . "Thank you for riding with Grace Cabs!"
+            : "Dear {$customerName},\n\nYour ride booking {$booking->booking_code} has been confirmed. A driver and vehicle have been assigned to your trip:\n\n"
+                . "Booking Reference : {$booking->booking_code}\n"
+                . "Driver Name       : {$driver->name}\n"
+                . "Driver Mobile     : {$driver->mobile}\n"
+                . "Vehicle Assigned   : {$vehicle->vehicle_name} (Number: {$vehicle->vehicle_number})\n"
+                . "Scheduled Date     : {$booking->booking_date}\n"
+                . "Scheduled Time     : {$booking->booking_time}\n"
+                . "Pickup Location    : {$booking->pickup_location}\n"
+                . "Drop Location      : {$booking->drop_location}\n\n"
+                . "Thank you for riding with Grace Cabs!";
 
         if ($booking->customer) {
             $this->notificationService->notifyUser(
@@ -557,6 +604,17 @@ class BookingController extends Controller
                 $operatorId,
                 null,
                 'driver_assigned',
+                'email',
+                $notifyTitle,
+                $notifyBody,
+                $booking->id,
+                null,
+                $customerMobile . '@cabs.com'
+            );
+            $this->notificationService->send(
+                $operatorId,
+                null,
+                'driver_assigned',
                 'sms',
                 $notifyTitle,
                 $notifyBody,
@@ -568,15 +626,70 @@ class BookingController extends Controller
 
         // 2. Notify Driver
         $driverUser = \App\Models\User::where('mobile', $driver->mobile)->first();
+        $driverNotifyBody = "Dear {$driver->name},\n\nYou have been assigned to a new trip. Here are the details:\n\n"
+            . "Booking Reference : {$booking->booking_code}\n"
+            . "Customer Name     : {$customerName}\n"
+            . "Customer Mobile   : {$customerMobile}\n"
+            . "Pickup Location    : {$booking->pickup_location}\n"
+            . "Drop Location      : {$booking->drop_location}\n"
+            . "Scheduled Date     : {$booking->booking_date}\n"
+            . "Scheduled Time     : {$booking->booking_time}\n"
+            . "Vehicle Assigned   : {$vehicle->vehicle_name} (Number: {$vehicle->vehicle_number})\n"
+            . "Passenger Count    : {$booking->passenger_count}\n\n"
+            . "Please make sure to arrive at the pickup location on time.";
+
         if ($driverUser) {
             $this->notificationService->notifyUser(
                 $operatorId,
                 $driverUser,
                 'driver_assigned',
                 'New Trip Assignment',
-                "You have been assigned to booking {$booking->booking_code}. Customer Name: " . ($booking->customer ? $booking->customer->name : $booking->customer_name) . " (Mobile: " . ($booking->customer ? $booking->customer->mobile : $booking->customer_mobile) . "). Pickup: {$booking->pickup_location}, Drop: {$booking->drop_location}, Date: {$booking->booking_date}, Time: {$booking->booking_time}, Passenger Count: {$booking->passenger_count}.",
+                $driverNotifyBody,
                 $booking->id
             );
+        } else {
+            $this->notificationService->send(
+                $operatorId,
+                null,
+                'driver_assigned',
+                'email',
+                'New Trip Assignment',
+                $driverNotifyBody,
+                $booking->id,
+                null,
+                $driver->mobile . '@driver.gracecabs.com'
+            );
+        }
+
+        // 3. Notify Old Driver if reassigned
+        if ($driverChanged && $oldDriverId) {
+            $oldDriver = Driver::find($oldDriverId);
+            if ($oldDriver) {
+                $oldDriverUser = \App\Models\User::where('mobile', $oldDriver->mobile)->first();
+                $oldDriverNotifyBody = "Dear {$oldDriver->name},\n\nYou have been unassigned from booking {$booking->booking_code}. You are now available for other trip assignments.";
+                if ($oldDriverUser) {
+                    $this->notificationService->notifyUser(
+                        $operatorId,
+                        $oldDriverUser,
+                        'driver_unassigned',
+                        'Trip Assignment Cancelled',
+                        $oldDriverNotifyBody,
+                        $booking->id
+                    );
+                } else {
+                    $this->notificationService->send(
+                        $operatorId,
+                        null,
+                        'driver_unassigned',
+                        'email',
+                        'Trip Assignment Cancelled',
+                        $oldDriverNotifyBody,
+                        $booking->id,
+                        null,
+                        $oldDriver->mobile . '@driver.gracecabs.com'
+                    );
+                }
+            }
         }
 
         return response()->json([

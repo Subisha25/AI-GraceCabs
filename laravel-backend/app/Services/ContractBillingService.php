@@ -179,29 +179,87 @@ class ContractBillingService
         });
 
         // 8. Generate PDF
+        $pdfPath = null;
         try {
-            $pdfResponse = $this->pdfService->generatePdf($invoice);
-            // Since PDF generation saves/returns stream or response, let's keep it safe
+            $pdfPath = $this->pdfService->savePdf($invoice);
+            $invoice->update(['pdf_path' => $pdfPath]);
         } catch (\Exception $e) {
-            // Log warning but continue
+            \Illuminate\Support\Facades\Log::error("Failed to generate/save monthly PDF invoice: " . $e->getMessage());
         }
 
         // 9. Send Email to organization billing contact
         $billingEmail = $contract->billing_email ?? $contract->organization->billing_contact_email ?? $contract->organization->email;
         if ($billingEmail) {
             try {
+                $orgName = $contract->organization->name;
+                $monthlyMessage = "Dear Billing Manager / Representative,\n\n"
+                    . "This email confirms that the monthly contract invoice for {$orgName} has been successfully generated.\n\n"
+                    . "--------------------------------------------------\n"
+                    . "MONTHLY BILLING INVOICE DETAILS\n"
+                    . "--------------------------------------------------\n"
+                    . "Invoice Number     : {$invoice->invoice_number}\n"
+                    . "Billing Period     : {$billingPeriod}\n"
+                    . "Organization       : {$orgName}\n"
+                    . "Agreement Title    : {$contract->contract_name}\n"
+                    . "Total Distance     : " . number_format($totalKm, 2) . " KM\n"
+                    . "Total Trips        : {$tripCount}\n"
+                    . "Base Rate          : ₹" . number_format($invoice->subtotal, 2) . "\n"
+                    . "Taxes (CGST/SGST)  : ₹" . number_format($invoice->tax_amount, 2) . "\n"
+                    . "Total Invoice Due  : ₹" . number_format($totalAmount, 2) . "\n"
+                    . "Payment Status     : " . strtoupper($invoice->status) . "\n\n"
+                    . "The detailed itemized PDF copy of this invoice is attached to this email.\n\n"
+                    . "Please process the payment by the due date. Thank you for partnering with Grace Cabs!";
+
                 $this->notificationService->send(
                     $operatorId,
                     null,
                     'invoice_issued',
                     'email',
                     'Monthly Contract Invoice Issued',
-                    "Monthly invoice {$invoice->invoice_number} for period {$billingPeriod} has been generated. Total due: ₹" . number_format($totalAmount, 2),
+                    $monthlyMessage,
                     null,
-                    $invoice->id
+                    $invoice->id,
+                    null,
+                    $pdfPath
                 );
             } catch (\Exception $e) {
-                // Ignore email failure in test environments
+                // Ignore email failure
+            }
+        }
+
+        // 10. Send SMS & WhatsApp Summary to organization billing contact if mobile exists
+        $billingMobile = $contract->billing_phone ?? $contract->organization->billing_contact_phone ?? $contract->organization->phone;
+        if ($billingMobile) {
+            try {
+                $smsMessage = "Monthly Invoice {$invoice->invoice_number} for period {$billingPeriod} has been generated for {$contract->organization->name}. Total due: ₹" . number_format($totalAmount, 2) . ". Status: {$invoice->status}.";
+                
+                // Send SMS
+                $this->notificationService->send(
+                    $operatorId,
+                    null,
+                    'invoice_issued',
+                    'sms',
+                    'Monthly Invoice Summary',
+                    $smsMessage,
+                    null,
+                    $invoice->id,
+                    $billingMobile
+                );
+
+                // Send WhatsApp if configured
+                $this->notificationService->send(
+                    $operatorId,
+                    null,
+                    'invoice_issued',
+                    'whatsapp',
+                    'Monthly Invoice Summary',
+                    $smsMessage,
+                    null,
+                    $invoice->id,
+                    $billingMobile
+                );
+            } catch (\Exception $e) {
+                // Ignore failures
             }
         }
 

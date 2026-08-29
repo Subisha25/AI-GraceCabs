@@ -14,11 +14,13 @@ class TemplateMail extends Mailable
 
     public string $mailTitle;
     public string $mailMessage;
+    public ?string $pdfPath;
 
-    public function __construct(string $title, string $message)
+    public function __construct(string $title, string $message, ?string $pdfPath = null)
     {
         $this->mailTitle = $title;
         $this->mailMessage = $message;
+        $this->pdfPath = $pdfPath;
     }
 
     public function envelope(): Envelope
@@ -30,9 +32,27 @@ class TemplateMail extends Mailable
 
     public function content(): Content
     {
-        // Simple inline content definition
         return new Content(
-            htmlString: "<h3>{$this->mailTitle}</h3><p>{$this->mailMessage}</p>",
+            view: 'emails.notification',
+            with: [
+                'mailTitle' => $this->mailTitle,
+                'mailMessage' => $this->mailMessage,
+            ]
         );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        if ($this->pdfPath && file_exists($this->pdfPath)) {
+            return [
+                \Illuminate\Mail\Mailables\Attachment::fromPath($this->pdfPath)
+            ];
+        }
+        return [];
     }
 }

@@ -45,9 +45,8 @@ class SmsProvider
             // Check if OTP code pattern exists in message (e.g. verification code is: 123456)
             if (preg_match('/verification code is:\s*([0-9]{6})/i', $message, $matches)) {
                 $otpVal = $matches[1];
-                // For OTP, 2Factor has a clean transactional AUTOGEN SMS route:
-                // https://2factor.in/API/V1/{api_key}/SMS/{phone_number}/{otp_val}/
-                $url = "https://2factor.in/API/V1/{$this->apiKey}/SMS/{$cleanPhone}/{$otpVal}/SwiftRideOTP";
+                $templateName = env('TWO_FACTOR_TEMPLATE_NAME', 'SwiftRideOTP');
+                $url = "https://2factor.in/API/V1/{$this->apiKey}/SMS/{$cleanPhone}/{$otpVal}/{$templateName}";
                 $response = Http::get($url);
             } else {
                 // Otherwise use addon single SMS endpoint

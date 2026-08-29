@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use App\Models\Operator;
 use App\Models\Organization;
 use App\Models\User;
@@ -554,6 +555,9 @@ class ContractBillingTest extends TestCase
             'booking_time' => '08:30:00',
             'status' => 'completed',
             'actual_distance_km' => 50.00,
+            'trip_type' => 'one_way',
+            'estimated_distance_km' => 50.00,
+            'estimated_fare' => 1000.00,
         ]);
 
         Booking::create([
@@ -569,6 +573,9 @@ class ContractBillingTest extends TestCase
             'booking_time' => '08:30:00',
             'status' => 'completed',
             'actual_distance_km' => 50.00,
+            'trip_type' => 'one_way',
+            'estimated_distance_km' => 50.00,
+            'estimated_fare' => 1000.00,
         ]);
 
         // Generate Invoice

@@ -30,7 +30,8 @@ class NotificationService
         string $title,
         string $message,
         ?string $bookingId = null,
-        ?string $invoiceId = null
+        ?string $invoiceId = null,
+        ?string $pdfPath = null
     ): void {
         if (!$user) {
             Log::warning("NotificationService notifyUser: User object is null.");
@@ -39,17 +40,17 @@ class NotificationService
 
         // 1. Send Email if email exists
         if (!empty($user->email)) {
-            $this->send($operatorId, $user->id, $type, 'email', $title, $message, $bookingId, $invoiceId);
+            $this->send($operatorId, $user->id, $type, 'email', $title, $message, $bookingId, $invoiceId, null, $pdfPath);
         }
 
         // 2. Send SMS if mobile exists
         if (!empty($user->mobile)) {
-            $this->send($operatorId, $user->id, $type, 'sms', $title, $message, $bookingId, $invoiceId);
+            $this->send($operatorId, $user->id, $type, 'sms', $title, $message, $bookingId, $invoiceId, null, $pdfPath);
         }
 
         // 3. Send WhatsApp if mobile exists
         if (!empty($user->mobile)) {
-            $this->send($operatorId, $user->id, $type, 'whatsapp', $title, $message, $bookingId, $invoiceId);
+            $this->send($operatorId, $user->id, $type, 'whatsapp', $title, $message, $bookingId, $invoiceId, null, $pdfPath);
         }
     }
 
@@ -65,7 +66,8 @@ class NotificationService
         string $message,
         ?string $bookingId = null,
         ?string $invoiceId = null,
-        ?string $customRecipient = null
+        ?string $customRecipient = null,
+        ?string $pdfPath = null
     ): Notification {
         // Create database record
         $notif = Notification::create([
@@ -89,7 +91,7 @@ class NotificationService
 
             switch (strtolower($channel)) {
                 case 'email':
-                    $success = $this->sendEmail($recipientEmail, $title, $message);
+                    $success = $this->sendEmail($recipientEmail, $title, $message, $pdfPath);
                     break;
 
                 case 'sms':
@@ -121,7 +123,6 @@ class NotificationService
             Log::error("Failed to send notification via channel {$channel}: " . $e->getMessage());
             $notif->update([
                 'status' => 'failed',
-                'error_message' => $e->getMessage()
             ]);
         }
 
@@ -131,7 +132,7 @@ class NotificationService
     /**
      * Send email notification.
      */
-    protected function sendEmail(?string $email, string $title, string $message): bool
+    protected function sendEmail(?string $email, string $title, string $message, ?string $pdfPath = null): bool
     {
         if (empty($email)) {
             Log::warning("NotificationService: Email address is empty.");
@@ -139,7 +140,7 @@ class NotificationService
         }
 
         try {
-            Mail::to($email)->send(new TemplateMail($title, $message));
+            Mail::to($email)->send(new TemplateMail($title, $message, $pdfPath));
             return true;
         } catch (\Exception $e) {
             Log::error("Email sending failed to {$email}: " . $e->getMessage());
@@ -175,8 +176,8 @@ class NotificationService
         $phoneNumberId = env('META_WHATSAPP_PHONE_ID');
 
         if (empty($metaToken) || empty($phoneNumberId)) {
-            Log::info("WhatsApp Mock Sent to: {$phone}. Message: \"{$message}\"");
-            return true;
+            Log::warning("WhatsApp NOT CONFIGURED. Skipping delivery for {$phone}.");
+            return false;
         }
 
         try {
