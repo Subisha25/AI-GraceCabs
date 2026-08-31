@@ -543,6 +543,18 @@ class BookingController extends Controller
         $oldDriverId = $booking->driver_id;
         $driverChanged = ($oldDriverId !== null && $oldDriverId !== $driver->id);
 
+        // Generate Start Trip OTP
+        $startOtp = (string) mt_rand(1000, 9999);
+        \App\Models\Otp::updateOrCreate(
+            ['purpose' => "trip_start_{$booking->id}"],
+            [
+                'user_id' => $booking->user_id,
+                'mobile' => $customerMobile ?? '0000000000',
+                'otp' => $startOtp,
+                'expires_at' => now()->addDays(7),
+            ]
+        );
+
         DB::transaction(function() use ($booking, $driver, $vehicle) {
             $booking->update([
                 'driver_id' => $driver->id,
@@ -577,7 +589,8 @@ class BookingController extends Controller
                 . "Scheduled Date     : {$booking->booking_date}\n"
                 . "Scheduled Time     : {$booking->booking_time}\n"
                 . "Pickup Location    : {$booking->pickup_location}\n"
-                . "Drop Location      : {$booking->drop_location}\n\n"
+                . "Drop Location      : {$booking->drop_location}\n"
+                . "Start Trip OTP     : {$startOtp} (Share with driver upon boarding)\n\n"
                 . "Thank you for riding with Grace Cabs!"
             : "Dear {$customerName},\n\nYour ride booking {$booking->booking_code} has been confirmed. A driver and vehicle have been assigned to your trip:\n\n"
                 . "Booking Reference : {$booking->booking_code}\n"
@@ -587,8 +600,11 @@ class BookingController extends Controller
                 . "Scheduled Date     : {$booking->booking_date}\n"
                 . "Scheduled Time     : {$booking->booking_time}\n"
                 . "Pickup Location    : {$booking->pickup_location}\n"
-                . "Drop Location      : {$booking->drop_location}\n\n"
+                . "Drop Location      : {$booking->drop_location}\n"
+                . "Start Trip OTP     : {$startOtp} (Share with driver upon boarding)\n\n"
                 . "Thank you for riding with Grace Cabs!";
+
+        $customerSms = "Grace Cabs: Ride {$booking->booking_code} confirmed. Driver: {$driver->name} ({$driver->mobile}), Vehicle: {$vehicle->vehicle_number}. Start OTP: {$startOtp}";
 
         if ($booking->customer) {
             $this->notificationService->notifyUser(
@@ -617,7 +633,7 @@ class BookingController extends Controller
                 'driver_assigned',
                 'sms',
                 $notifyTitle,
-                $notifyBody,
+                $customerSms,
                 $booking->id,
                 null,
                 $booking->customer_mobile

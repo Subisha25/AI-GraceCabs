@@ -43,7 +43,11 @@ class TripController extends Controller
         }
 
         // Return bookings assigned to the driver
-        $bookings = Booking::where('driver_id', $driver->id)->with(['trip'])->get();
+        $bookings = Booking::where('driver_id', $driver->id)
+            ->with(['trip', 'customer', 'vehicle'])
+            ->orderBy('booking_date', 'desc')
+            ->orderBy('booking_time', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -91,6 +95,35 @@ class TripController extends Controller
             return response()->json(['success' => false, 'message' => 'Cannot start trip from status: ' . $booking->status], 422);
         }
 
+        // Validate Start OTP if provided or required
+        if ($request->has('start_otp') && !empty($request->start_otp)) {
+            $otpRecord = \App\Models\Otp::where('purpose', "trip_start_{$booking->id}")
+                ->where('otp', trim($request->start_otp))
+                ->where('expires_at', '>=', now())
+                ->first();
+
+            if (!$otpRecord) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired Start Trip OTP provided. Please ask the passenger for the correct 4-digit start OTP.'
+                ], 422);
+            }
+            $otpRecord->update(['verified_at' => now()]);
+        }
+
+        // Generate End Trip OTP for completion handshake
+        $customerMobile = $booking->customer ? $booking->customer->mobile : $booking->customer_mobile;
+        $endOtp = (string) mt_rand(1000, 9999);
+        \App\Models\Otp::updateOrCreate(
+            ['purpose' => "trip_end_{$booking->id}"],
+            [
+                'user_id' => $booking->user_id,
+                'mobile' => $customerMobile ?? '0000000000',
+                'otp' => $endOtp,
+                'expires_at' => now()->addDays(7),
+            ]
+        );
+
         $trip = null;
         DB::transaction(function() use ($booking, $driver, $request, &$trip) {
             $trip = Trip::updateOrCreate(
@@ -120,8 +153,11 @@ class TripController extends Controller
             . "Vehicle Assigned   : " . ($vehicle ? $vehicle->vehicle_name : 'N/A') . " (Number: " . ($vehicle ? $vehicle->vehicle_number : 'N/A') . ")\n"
             . "Pickup Location    : {$booking->pickup_location}\n"
             . "Drop Location      : {$booking->drop_location}\n"
-            . "Start Time         : " . now()->format('Y-m-d H:i:s') . "\n\n"
+            . "Start Time         : " . now()->format('Y-m-d H:i:s') . "\n"
+            . "End Trip OTP       : {$endOtp} (Share with driver when you reach destination)\n\n"
             . "You can track the live progress in your dashboard.";
+
+        $customerSms = "Grace Cabs: Ride {$booking->booking_code} started with driver {$driver->name}. Your End OTP is: {$endOtp}. Share upon reaching destination.";
 
         $driverStartNotify = "Dear " . ($driver ? $driver->name : 'Driver') . ",\n\n"
             . "Trip started confirmation for booking {$booking->booking_code} has been successfully logged.\n\n"
@@ -154,7 +190,7 @@ class TripController extends Controller
                 'trip_started',
                 'sms',
                 'Your Ride Has Started',
-                "Your ride {$booking->booking_code} has started. Track here: " . url('/track-booking'),
+                $customerSms,
                 $booking->id,
                 null,
                 $booking->customer_mobile
@@ -283,6 +319,22 @@ class TripController extends Controller
 
         if ($booking->status !== 'started') {
             return response()->json(['success' => false, 'message' => 'Cannot complete trip from status: ' . $booking->status], 422);
+        }
+
+        // Validate End OTP if provided or required
+        if ($request->has('end_otp') && !empty($request->end_otp)) {
+            $otpRecord = \App\Models\Otp::where('purpose', "trip_end_{$booking->id}")
+                ->where('otp', trim($request->end_otp))
+                ->where('expires_at', '>=', now())
+                ->first();
+
+            if (!$otpRecord) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired End Trip OTP provided. Please ask the passenger for the correct 4-digit end OTP.'
+                ], 422);
+            }
+            $otpRecord->update(['verified_at' => now()]);
         }
 
         $completedAt = now();

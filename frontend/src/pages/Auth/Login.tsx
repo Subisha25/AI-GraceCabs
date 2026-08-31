@@ -157,12 +157,12 @@ const Login: React.FC = () => {
           <div className="flex justify-center gap-4 bg-gray-100 p-1 rounded-xl">
             <button
               onClick={() => { setLoginMethod('password'); setOtpSent(false); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${loginMethod === 'password' ? 'bg-[#275981] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${loginMethod === 'password' ? 'bg-[#275981] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
               Password Login
             </button>
             <button
               onClick={() => setLoginMethod('otp')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${loginMethod === 'otp' ? 'bg-[#275981] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${loginMethod === 'otp' ? 'bg-[#275981] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
               Mobile OTP Login
             </button>
           </div>
@@ -190,9 +190,9 @@ const Login: React.FC = () => {
               </div>
 
               <button type="submit" disabled={loading}
-                className="w-full py-3 bg-[#275981] hover:bg-[#1c4362] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                className="w-full py-3 bg-[#275981] hover:bg-[#1c4362] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                 {loading && <FontAwesomeIcon icon={faSpinner} spin />}
-                <span>Login</span>
+                <span>{loading ? 'Signing in...' : 'Login'}</span>
               </button>
             </form>
           ) : (
@@ -220,14 +220,14 @@ const Login: React.FC = () => {
               )}
 
               <button type="submit" disabled={loading}
-                className="w-full py-3 bg-[#275981] hover:bg-[#1c4362] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                className="w-full py-3 bg-[#275981] hover:bg-[#1c4362] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                 {loading && <FontAwesomeIcon icon={faSpinner} spin />}
-                <span>{otpSent ? 'Verify OTP & Login' : 'Send Verification OTP'}</span>
+                <span>{loading ? 'Processing...' : otpSent ? 'Verify OTP & Login' : 'Send Verification OTP'}</span>
               </button>
 
               {otpSent && (
                 <div className="text-center text-xs">
-                  <button type="button" onClick={() => setOtpSent(false)} className="text-blue-600 hover:underline">
+                  <button type="button" onClick={() => setOtpSent(false)} className="text-blue-600 hover:underline cursor-pointer">
                     Change Mobile Number
                   </button>
                 </div>
@@ -237,7 +237,7 @@ const Login: React.FC = () => {
 
           <div className="text-center text-sm text-gray-500 border-t border-gray-100 pt-4">
             Don't have an account?{' '}
-            <button onClick={() => navigate('/register')} className="text-blue-600 hover:underline font-semibold">
+            <button onClick={() => navigate('/register')} className="text-blue-600 hover:underline font-semibold cursor-pointer">
               Register
             </button>
           </div>

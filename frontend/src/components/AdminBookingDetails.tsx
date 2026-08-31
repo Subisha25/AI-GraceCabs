@@ -303,34 +303,49 @@ const AdminBookingDetails: React.FC = () => {
             </h3>
             
             {/* Read-Only Vehicle Info */}
-            <div className="bg-white/60 p-4 rounded-xl border border-blue-100 flex flex-col sm:flex-row justify-between gap-4 text-sm text-gray-700">
-              <div>
-                <span className="text-gray-400 block text-xs font-semibold">Booking</span>
-                <span className="font-bold text-gray-800">{booking.booking_code}</span>
+            <div className="bg-white/70 p-4 rounded-2xl border border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm text-gray-700 shadow-sm">
+              <div className="flex items-center gap-3">
+                {booking.vehicle?.image ? (
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-blue-200 shadow-sm bg-white flex-shrink-0">
+                    <img
+                      src={booking.vehicle.image.startsWith('http') ? booking.vehicle.image : `http://localhost:8000${booking.vehicle.image}`}
+                      alt={booking.vehicle.vehicle_type}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                    <FontAwesomeIcon icon={faCar} />
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">Assigned Vehicle</span>
+                  <span className="font-extrabold text-gray-800 text-sm">
+                    {booking.vehicle ? `${booking.vehicle.vehicle_type} (${booking.vehicle.vehicle_number})` : 'Vehicle Not Assigned'}
+                  </span>
+                </div>
               </div>
+
               <div>
-                <span className="text-gray-400 block text-xs font-semibold">Trip Dates</span>
-                <span className="font-bold text-gray-800 font-mono">
-                  {booking.booking_date} @ {booking.booking_time} to {booking.expected_end_date || '—'} @ {booking.expected_end_time || '—'}
+                <span className="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">Trip Schedule</span>
+                <span className="font-bold text-gray-800 font-mono text-xs">
+                  {booking.booking_date} @ {booking.booking_time}
                 </span>
               </div>
+
               <div>
-                <span className="text-gray-400 block text-xs font-semibold">Vehicle Type</span>
-                <span className="font-bold text-gray-800">{booking.vehicle ? booking.vehicle.vehicle_type : '—'}</span>
-              </div>
-              <div>
-                <span className="text-gray-400 block text-xs font-semibold">Vehicle Number</span>
-                <span className="font-bold text-gray-800 font-mono">{booking.vehicle ? booking.vehicle.vehicle_number : '—'}</span>
+                <span className="text-gray-400 block text-[10px] font-bold uppercase tracking-wider">Booking Code</span>
+                <span className="font-extrabold text-blue-900 font-mono text-sm">{booking.booking_code}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Driver</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Driver Only</label>
                 <select
                   value={selectedDriverId}
                   onChange={(e) => setSelectedDriverId(e.target.value)}
-                  className="w-full border border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-[#1B4F8A] text-sm bg-white"
+                  className="w-full border border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-[#1B4F8A] text-sm bg-white cursor-pointer"
                 >
                   <option value="">-- Choose Driver --</option>
                   {drivers.map(d => (
@@ -343,10 +358,11 @@ const AdminBookingDetails: React.FC = () => {
 
               <button
                 onClick={handleAssignDriver}
-                disabled={assigning}
-                className="w-full py-3.5 bg-[#1B4F8A] hover:bg-blue-800 text-white font-bold rounded-xl shadow-md transition-all text-sm"
+                disabled={assigning || !selectedDriverId}
+                className="w-full py-3.5 bg-[#1B4F8A] hover:bg-blue-800 text-white font-bold rounded-xl shadow-md transition-all text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {assigning ? 'Assigning...' : ['pending', 'accepted'].includes(booking.status.toLowerCase()) ? 'Assign Driver' : 'Update Driver'}
+                {assigning && <FontAwesomeIcon icon={faSpinner} spin />}
+                <span>{assigning ? 'Assigning Driver...' : ['pending', 'accepted'].includes(booking.status.toLowerCase()) ? 'Assign Driver' : 'Update Driver'}</span>
               </button>
             </div>
           </div>

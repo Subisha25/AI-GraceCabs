@@ -577,11 +577,24 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
                           </div>
                         )}
 
-                        {/* Header */}
-                        <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accent.badge} text-white`}>
-                            <FontAwesomeIcon icon={faCar} />
-                          </div>
+                        {/* Header with image */}
+                        <div className="flex items-start gap-3.5">
+                          {v.image ? (
+                            <div className="w-14 h-14 rounded-xl overflow-hidden border border-blue-200 shadow-sm bg-gray-100 flex-shrink-0">
+                              <img
+                                src={v.image.startsWith('http') ? v.image : `http://localhost:8000${v.image}`}
+                                alt={v.vehicle_type}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accent.badge} text-white shadow-sm flex-shrink-0`}>
+                              <FontAwesomeIcon icon={faCar} className="text-lg" />
+                            </div>
+                          )}
                           <div>
                             <h3 className="font-extrabold text-gray-800 text-base">{v.vehicle_type}</h3>
                             <p className="text-xs text-gray-500 font-medium">Capacity: {v.seating_capacity} Seats</p>
@@ -623,14 +636,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
             <button
               type="button"
               onClick={() => navigate(isAdmin ? '/bookings' : '/customer/dashboard')}
-              className="px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-55 active:bg-gray-100 transition-all text-sm"
+              className="px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-55 active:bg-gray-100 transition-all text-sm cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={vehiclesLoading || !vehicleId}
-              className="px-8 py-3.5 bg-[#275981] hover:bg-[#1c4362] disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
+              className="px-8 py-3.5 bg-[#275981] hover:bg-[#1c4362] disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-sm cursor-pointer"
             >
               Confirm Booking Details
             </button>
@@ -657,6 +670,30 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
                 </div>
               )}
 
+              {/* Selected Vehicle Card Display (Read-Only) */}
+              {selectedVehicle && (
+                <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-100 flex items-center gap-4">
+                  {selectedVehicle.image ? (
+                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-blue-200 shadow-sm bg-white flex-shrink-0">
+                      <img
+                        src={selectedVehicle.image.startsWith('http') ? selectedVehicle.image : `http://localhost:8000${selectedVehicle.image}`}
+                        alt={selectedVehicle.vehicle_type}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                      <FontAwesomeIcon icon={faCar} className="text-lg" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Selected Vehicle</span>
+                    <h4 className="font-extrabold text-gray-800 text-sm">{selectedVehicle.vehicle_type}</h4>
+                    <p className="text-xs font-mono font-bold text-gray-600">{selectedVehicle.vehicle_number} • {selectedVehicle.seating_capacity} Seats</p>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pickup Location</p>
@@ -678,12 +715,6 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Passengers</p>
                   <p className="text-sm font-semibold text-gray-800">{passengerCount} Person{parseInt(passengerCount) > 1 ? 's' : ''}</p>
                 </div>
-                {selectedVehicle && (
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Vehicle Selected</p>
-                    <p className="text-sm font-semibold text-gray-800">{selectedVehicle.vehicle_type} ({selectedVehicle.vehicle_number})</p>
-                  </div>
-                )}
                 {selectedEstimate && (
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Est. Distance</p>
@@ -705,7 +736,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
                   type="button"
                   disabled={bookingLoading}
                   onClick={() => setShowReviewModal(false)}
-                  className="flex-1 py-3 text-center border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-55 active:bg-gray-100 transition-all text-sm"
+                  className="flex-1 py-3 text-center border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-55 active:bg-gray-100 transition-all text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Go Back
                 </button>
@@ -713,7 +744,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ mode = 'customer' }) => {
                   type="button"
                   disabled={bookingLoading}
                   onClick={handleConfirmBooking}
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {bookingLoading && <FontAwesomeIcon icon={faSpinner} spin />}
                   <span>{bookingLoading ? 'Booking Cab...' : 'Confirm Book'}</span>

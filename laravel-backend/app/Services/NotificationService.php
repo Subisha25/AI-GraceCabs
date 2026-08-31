@@ -130,7 +130,7 @@ class NotificationService
     }
 
     /**
-     * Send email notification.
+     * Send email notification via Laravel SMTP.
      */
     protected function sendEmail(?string $email, string $title, string $message, ?string $pdfPath = null): bool
     {
@@ -149,13 +149,11 @@ class NotificationService
     }
 
     /**
-     * Send SMS notification.
+     * Send SMS notification via Node.js Notification Microservice.
      */
     protected function sendSms(string $phone, string $message): bool
     {
         if (empty($phone)) {
-            // For general OTP code send without user profile, try to extract mobile from cache or message context
-            // Or log warning
             Log::warning("NotificationService: SMS phone number is empty.");
             return false;
         }
@@ -163,7 +161,7 @@ class NotificationService
     }
 
     /**
-     * Send WhatsApp notification.
+     * Send WhatsApp notification via Node.js Notification Microservice.
      */
     protected function sendWhatsapp(string $phone, string $message): bool
     {
@@ -172,36 +170,42 @@ class NotificationService
             return false;
         }
 
-        $metaToken = env('META_WHATSAPP_TOKEN');
-        $phoneNumberId = env('META_WHATSAPP_PHONE_ID');
+        $nodeServiceUrl = env('NOTIFICATION_SERVICE_URL', 'http://127.0.0.1:5001');
+        $serviceToken = env('NOTIFICATION_SERVICE_TOKEN', 'grace_internal_notif_sec_key_2026');
 
-        if (empty($metaToken) || empty($phoneNumberId)) {
-            Log::warning("WhatsApp NOT CONFIGURED. Skipping delivery for {$phone}.");
+        if (empty($nodeServiceUrl)) {
+            Log::warning("NotificationService: NOTIFICATION_SERVICE_URL is not configured.");
             return false;
         }
 
+        if (app()->environment('testing')) {
+            Log::info("WhatsApp Mock Sent (Testing environment): {$phone}. Message: \"{$message}\"");
+            return true;
+        }
+
         try {
-            $formattedNumber = str_starts_with($phone, '+') ? $phone : "+91" . preg_replace('/[^0-9]/', '', $phone);
-            
-            $url = "https://graph.facebook.com/v21.0/{$phoneNumberId}/messages";
-            $response = Http::withToken($metaToken)->post($url, [
-                'messaging_product' => 'whatsapp',
-                'to' => $formattedNumber,
-                'type' => 'text',
-                'text' => [
-                    'body' => $message
-                ]
-            ]);
+            $response = Http::withToken($serviceToken)
+                ->timeout(5)
+                ->post("{$nodeServiceUrl}/api/notifications/whatsapp", [
+                    'to' => $phone,
+                    'message' => $message,
+                ]);
 
             if ($response->successful()) {
-                Log::info("WhatsApp message successfully sent to {$formattedNumber} via Meta API.");
-                return true;
+                $data = $response->json();
+                if (!empty($data['success'])) {
+                    Log::info("WhatsApp message successfully sent via Node Notification Service to {$phone}. MessageID: " . ($data['messageId'] ?? 'sent'));
+                    return true;
+                } elseif (($data['status'] ?? '') === 'configuration_missing') {
+                    Log::warning("WhatsApp NOT CONFIGURED in Node notification service. Skipping delivery for {$phone}.");
+                    return false;
+                }
             }
 
-            Log::error("Meta WhatsApp API responded with error: " . $response->body());
+            Log::error("Node notification service WhatsApp error for {$phone}: " . $response->body());
             return false;
         } catch (\Exception $e) {
-            Log::error("Failed to send WhatsApp message via Meta: " . $e->getMessage());
+            Log::error("Failed to send WhatsApp message via Node notification service to {$phone}: " . $e->getMessage());
             return false;
         }
     }

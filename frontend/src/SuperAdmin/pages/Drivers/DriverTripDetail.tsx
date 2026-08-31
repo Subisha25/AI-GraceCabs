@@ -6,7 +6,8 @@ import PageLayout from '../../../components/PageLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUser, faPhone, faMapMarkerAlt, faCalendarAlt, 
-  faClock, faCar, faCheckCircle, faSpinner, faPlay, faStopCircle
+  faClock, faCar, faCheckCircle, faSpinner, faPlay, faStopCircle,
+  faKey, faTimes, faShieldAlt
 } from '@fortawesome/free-solid-svg-icons';
 
 interface Booking {
@@ -23,7 +24,7 @@ interface Booking {
   actual_distance_km: string | number | null;
   final_fare: string | number | null;
   customer?: { name: string; mobile: string; email: string };
-  vehicle?: { vehicle_name: string; vehicle_number: string };
+  vehicle?: { vehicle_type: string; vehicle_number: string; image?: string | null };
 }
 
 const getDistanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -44,7 +45,15 @@ const DriverTripDetail: React.FC = () => {
   const navigate = useNavigate();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  
+  // OTP Modals
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [startOtp, setStartOtp] = useState('');
+  const [isStartingTrip, setIsStartingTrip] = useState(false);
+
+  const [showEndModal, setShowEndModal] = useState(false);
+  const [endOtp, setEndOtp] = useState('');
+  const [isEndingTrip, setIsEndingTrip] = useState(false);
 
   const fetchTripDetails = async () => {
     setLoading(true);
@@ -105,7 +114,6 @@ const DriverTripDetail: React.FC = () => {
               lastSentLat = latitude;
               lastSentLng = longitude;
               lastSentTime = nowMs;
-              console.log('GPS coordinates uploaded:', latitude, longitude);
             })
             .catch((err) => {
               console.warn('GPS location upload failed:', err);
@@ -122,45 +130,87 @@ const DriverTripDetail: React.FC = () => {
         navigator.geolocation.clearWatch(id);
       };
     }
-  }, [booking?.status]);
+  }, [booking?.status, booking?.id]);
 
-  const handleStartTrip = async () => {
-    if (!booking) return;
-    setActionLoading(true);
+  const getCurrentCoords = (): Promise<{ latitude: number; longitude: number }> => {
+    return new Promise((resolve) => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            resolve({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+            });
+          },
+          () => {
+            // Default fallback if GPS permission not granted
+            resolve({ latitude: 13.0827, longitude: 80.2707 });
+          },
+          { timeout: 5000 }
+        );
+      } else {
+        resolve({ latitude: 13.0827, longitude: 80.2707 });
+      }
+    });
+  };
+
+  const handleStartTripSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!booking || isStartingTrip) return;
+    if (!startOtp.trim()) {
+      showToast('Please enter the Start Trip OTP given by customer', 'error');
+      return;
+    }
+
+    setIsStartingTrip(true);
     try {
-      // Mock latitude and longitude for starting trip
+      const coords = await getCurrentCoords();
       const res = await axiosInstance.post(`/driver/trips/${booking.id}/start`, {
-        latitude: 13.0827, // Chennai latitude
-        longitude: 80.2707, // Chennai longitude
+        start_otp: startOtp.trim(),
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       });
+
       if (res.data && res.data.success) {
-        showToast('Trip started successfully! Drive safe.', 'success');
+        showToast('Trip started successfully! Drive safely.', 'success');
+        setShowStartModal(false);
+        setStartOtp('');
         fetchTripDetails();
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to start trip', 'error');
+      showToast(err.response?.data?.message || 'Failed to start trip. Check Start OTP.', 'error');
     } finally {
-      setActionLoading(false);
+      setIsStartingTrip(false);
     }
   };
 
-  const handleCompleteTrip = async () => {
-    if (!booking) return;
-    setActionLoading(true);
+  const handleCompleteTripSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!booking || isEndingTrip) return;
+    if (!endOtp.trim()) {
+      showToast('Please enter the End Trip OTP given by customer', 'error');
+      return;
+    }
+
+    setIsEndingTrip(true);
     try {
-      // Mock latitude and longitude for completing trip
+      const coords = await getCurrentCoords();
       const res = await axiosInstance.post(`/driver/trips/${booking.id}/complete`, {
-        latitude: 13.1000,
-        longitude: 80.3000,
+        end_otp: endOtp.trim(),
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       });
+
       if (res.data && res.data.success) {
-        showToast('Trip completed successfully! Invoice has been generated.', 'success');
+        showToast('Trip completed successfully! Invoice and PDF have been generated.', 'success');
+        setShowEndModal(false);
+        setEndOtp('');
         fetchTripDetails();
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to complete trip', 'error');
+      showToast(err.response?.data?.message || 'Failed to complete trip. Check End OTP.', 'error');
     } finally {
-      setActionLoading(false);
+      setIsEndingTrip(false);
     }
   };
 
@@ -176,6 +226,12 @@ const DriverTripDetail: React.FC = () => {
   }
 
   if (!booking) return null;
+
+  const vehicleImageUrl = booking.vehicle?.image
+    ? booking.vehicle.image.startsWith('http')
+      ? booking.vehicle.image
+      : `http://localhost:8000${booking.vehicle.image}`
+    : null;
 
   return (
     <PageLayout>
@@ -197,11 +253,11 @@ const DriverTripDetail: React.FC = () => {
         </div>
 
         {/* Card details */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
           
           {/* Customer */}
           <div className="flex gap-4">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
               <FontAwesomeIcon icon={faUser} className="text-lg" />
             </div>
             <div>
@@ -214,14 +270,24 @@ const DriverTripDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Vehicle */}
+          {/* Vehicle with Image */}
           <div className="flex gap-4 border-t pt-4">
-            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <FontAwesomeIcon icon={faCar} className="text-lg" />
-            </div>
+            {vehicleImageUrl ? (
+              <div className="w-14 h-14 rounded-xl overflow-hidden border border-indigo-100 shadow-sm bg-gray-50 flex-shrink-0">
+                <img
+                  src={vehicleImageUrl}
+                  alt={booking.vehicle?.vehicle_type || 'Vehicle'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                <FontAwesomeIcon icon={faCar} className="text-lg" />
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-400 uppercase font-semibold">Vehicle Asset</p>
-              <h3 className="text-lg font-bold text-gray-800">{booking.vehicle?.vehicle_name || '—'}</h3>
+              <h3 className="text-lg font-bold text-gray-800">{booking.vehicle?.vehicle_type || '—'}</h3>
               <p className="text-sm text-indigo-600 font-mono font-semibold mt-1">
                 {booking.vehicle?.vehicle_number || '—'}
               </p>
@@ -278,7 +344,7 @@ const DriverTripDetail: React.FC = () => {
 
           {/* Completion summary if completed */}
           {['completed', 'paid'].includes(booking.status) && (
-            <div className="bg-green-50 border border-green-100 rounded-xl p-4 space-y-2">
+            <div className="bg-green-50 border border-green-100 rounded-2xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-green-800 font-bold">
                 <FontAwesomeIcon icon={faCheckCircle} />
                 Trip Closed Details
@@ -295,37 +361,162 @@ const DriverTripDetail: React.FC = () => {
         <div className="pt-2">
           {booking.status === 'confirmed' && (
             <button
-              onClick={handleStartTrip}
-              disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+              onClick={() => setShowStartModal(true)}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
-              {actionLoading ? (
-                <FontAwesomeIcon icon={faSpinner} spin />
-              ) : (
-                <FontAwesomeIcon icon={faPlay} />
-              )}
-              Start Trip
+              <FontAwesomeIcon icon={faPlay} />
+              Start Trip (Enter OTP)
             </button>
           )}
 
           {booking.status === 'started' && (
             <button
-              onClick={handleCompleteTrip}
-              disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+              onClick={() => setShowEndModal(true)}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
-              {actionLoading ? (
-                <FontAwesomeIcon icon={faSpinner} spin />
-              ) : (
-                <FontAwesomeIcon icon={faStopCircle} />
-              )}
-              Complete Trip
+              <FontAwesomeIcon icon={faStopCircle} />
+              Complete Trip (Enter End OTP)
             </button>
           )}
         </div>
       </div>
+
+      {/* Start Trip OTP Modal */}
+      {showStartModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md relative shadow-2xl animate-fade-in">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 cursor-pointer"
+              onClick={() => setShowStartModal(false)}
+            >
+              <FontAwesomeIcon icon={faTimes} className="text-xl" />
+            </button>
+            
+            <div className="text-center space-y-2 mb-6">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <FontAwesomeIcon icon={faShieldAlt} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">Start Trip Security Verification</h2>
+              <p className="text-xs text-gray-500">Ask the passenger for the 4-digit Start OTP sent to their mobile/email.</p>
+            </div>
+
+            <form onSubmit={handleStartTripSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  Start Trip OTP *
+                </label>
+                <div className="relative">
+                  <FontAwesomeIcon icon={faKey} className="absolute left-3.5 top-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    placeholder="Enter 4-digit OTP"
+                    value={startOtp}
+                    onChange={(e) => setStartOtp(e.target.value)}
+                    className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-center text-lg font-mono tracking-widest font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowStartModal(false)}
+                  className="flex-1 py-3 text-center border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition cursor-pointer text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isStartingTrip || !startOtp.trim()}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isStartingTrip ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} spin />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify & Start'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* End Trip OTP Modal */}
+      {showEndModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md relative shadow-2xl animate-fade-in">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 cursor-pointer"
+              onClick={() => setShowEndModal(false)}
+            >
+              <FontAwesomeIcon icon={faTimes} className="text-xl" />
+            </button>
+            
+            <div className="text-center space-y-2 mb-6">
+              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <FontAwesomeIcon icon={faCheckCircle} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800">Complete Trip Handshake</h2>
+              <p className="text-xs text-gray-500">Ask the passenger for the 4-digit End OTP sent upon trip start.</p>
+            </div>
+
+            <form onSubmit={handleCompleteTripSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  End Trip OTP *
+                </label>
+                <div className="relative">
+                  <FontAwesomeIcon icon={faKey} className="absolute left-3.5 top-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    placeholder="Enter 4-digit End OTP"
+                    value={endOtp}
+                    onChange={(e) => setEndOtp(e.target.value)}
+                    className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-center text-lg font-mono tracking-widest font-bold focus:ring-2 focus:ring-green-500 outline-none"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEndModal(false)}
+                  className="flex-1 py-3 text-center border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition cursor-pointer text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEndingTrip || !endOtp.trim()}
+                  className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isEndingTrip ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} spin />
+                      Completing...
+                    </>
+                  ) : (
+                    'Verify & Complete'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 };
 
 export default DriverTripDetail;
+

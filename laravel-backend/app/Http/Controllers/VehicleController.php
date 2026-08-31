@@ -42,7 +42,8 @@ class VehicleController extends Controller
             'vehicle_number' => 'required|string|max:20',
             'seating_capacity' => 'required|integer|min:1',
             'price_per_km' => 'required|numeric|min:0',
-            'image' => 'nullable|string|max:255',
+            'image' => 'nullable',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'status' => 'required|string|in:active,inactive,available,busy,maintenance',
         ]);
 
@@ -58,6 +59,33 @@ class VehicleController extends Controller
                 'errors' => ['vehicle_number' => ['The vehicle number has already been taken for this operator.']]
             ], 422);
         }
+
+        // Handle uploaded image file if present
+        $imagePath = null;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/vehicles');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $file->move($destinationPath, $filename);
+            $imagePath = '/uploads/vehicles/' . $filename;
+        } elseif ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/vehicles');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $file->move($destinationPath, $filename);
+            $imagePath = '/uploads/vehicles/' . $filename;
+        } elseif (is_string($request->input('image')) && !empty($request->input('image'))) {
+            $imagePath = $request->input('image');
+        }
+
+        unset($validated['image_file']);
+        $validated['image'] = $imagePath;
 
         $vehicle = Vehicle::create(array_merge(
             $validated,
@@ -120,7 +148,8 @@ class VehicleController extends Controller
             'vehicle_number' => 'required|string|max:20',
             'seating_capacity' => 'required|integer|min:1',
             'price_per_km' => 'required|numeric|min:0',
-            'image' => 'nullable|string|max:255',
+            'image' => 'nullable',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'status' => 'required|string|in:active,inactive,available,busy,maintenance',
         ]);
 
@@ -137,6 +166,43 @@ class VehicleController extends Controller
                 'errors' => ['vehicle_number' => ['The vehicle number has already been taken for this operator.']]
             ], 422);
         }
+
+        // Handle uploaded image file replacement if present
+        $imagePath = $vehicle->image;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/vehicles');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $file->move($destinationPath, $filename);
+            
+            // Delete old file if present
+            if ($vehicle->image && file_exists(public_path($vehicle->image))) {
+                @unlink(public_path($vehicle->image));
+            }
+            $imagePath = '/uploads/vehicles/' . $filename;
+        } elseif ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/vehicles');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $file->move($destinationPath, $filename);
+
+            // Delete old file if present
+            if ($vehicle->image && file_exists(public_path($vehicle->image))) {
+                @unlink(public_path($vehicle->image));
+            }
+            $imagePath = '/uploads/vehicles/' . $filename;
+        } elseif ($request->has('image') && is_string($request->input('image'))) {
+            $imagePath = $request->input('image');
+        }
+
+        unset($validated['image_file']);
+        $validated['image'] = $imagePath;
 
         $vehicle->update($validated);
 

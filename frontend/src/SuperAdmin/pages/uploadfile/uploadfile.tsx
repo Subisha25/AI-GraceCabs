@@ -17,10 +17,6 @@ const [inputKey, setInputKey] = useState(Date.now());
     formData.append("file", file);
 
     try {
-      // const res = await axios.post(
-      //   "http://localhost:5000/api/user/upload-users",
-      //   formData
-      // );
         const BASE_URL = config.baseurl.apibaseurl;
 
             const res = await axios.post(

@@ -7,17 +7,17 @@ use Illuminate\Support\Facades\Log;
 
 class SmsProvider
 {
-    protected ?string $apiKey;
-    protected ?string $senderId;
+    protected ?string $nodeServiceUrl;
+    protected ?string $serviceToken;
 
     public function __construct()
     {
-        $this->apiKey = env('TWO_FACTOR_API_KEY');
-        $this->senderId = env('TWO_FACTOR_SENDER_ID', 'SWIFTR');
+        $this->nodeServiceUrl = env('NOTIFICATION_SERVICE_URL', 'http://127.0.0.1:5001');
+        $this->serviceToken = env('NOTIFICATION_SERVICE_TOKEN', 'grace_internal_notif_sec_key_2026');
     }
 
     /**
-     * Send SMS to a recipient.
+     * Send SMS to a recipient via Node.js Notification Microservice.
      */
     public function send(string $to, string $message): bool
     {
@@ -26,53 +26,45 @@ class SmsProvider
             return false;
         }
 
-        // Standardize phone number for 2factor (remove leading '+' and ensure 10-digit format for India)
-        $cleanPhone = preg_replace('/[^0-9]/', '', $to);
-        if (strlen($cleanPhone) > 10 && str_starts_with($cleanPhone, '91')) {
-            $cleanPhone = substr($cleanPhone, 2);
+        if (empty($this->nodeServiceUrl)) {
+            Log::warning("SmsProvider: NOTIFICATION_SERVICE_URL is missing in .env.");
+            return false;
         }
 
-        if (empty($this->apiKey)) {
-            Log::warning("SmsProvider: TWO_FACTOR_API_KEY is missing in .env. Cannot send SMS.");
-            if (app()->environment('testing')) {
-                Log::info("SMS Mock Sent (Testing environment): {$to} (cleaned: {$cleanPhone}). Message: \"{$message}\"");
-                return true;
-            }
-            return false;
+        if (app()->environment('testing')) {
+            Log::info("SMS Mock Sent (Testing environment): {$to}. Message: \"{$message}\"");
+            return true;
         }
 
         try {
-            // Check if OTP code pattern exists in message (e.g. verification code is: 123456)
-            if (preg_match('/verification code is:\s*([0-9]{6})/i', $message, $matches)) {
-                $otpVal = $matches[1];
-                $templateName = env('TWO_FACTOR_TEMPLATE_NAME', 'SwiftRideOTP');
-                $url = "https://2factor.in/API/V1/{$this->apiKey}/SMS/{$cleanPhone}/{$otpVal}/{$templateName}";
-                $response = Http::get($url);
-            } else {
-                // Otherwise use addon single SMS endpoint
-                $url = "https://2factor.in/API/V1/{$this->apiKey}/ADDON_SERVICES/SEND/SINGLE_SMS";
-                $response = Http::post($url, [
-                    'to' => $cleanPhone,
-                    'from' => $this->senderId,
-                    'msg' => $message
+            $response = Http::withToken($this->serviceToken)
+                ->timeout(5)
+                ->post("{$this->nodeServiceUrl}/api/notifications/sms", [
+                    'to' => $to,
+                    'message' => $message,
                 ]);
-            }
 
             if ($response->successful()) {
-                Log::info("SMS successfully sent to {$to} via 2Factor.");
-                return true;
+                $data = $response->json();
+                if (!empty($data['success'])) {
+                    Log::info("SMS successfully sent to {$to} via Node Notification Service. MessageID: " . ($data['messageId'] ?? 'sent'));
+                    return true;
+                } elseif (($data['status'] ?? '') === 'configuration_missing') {
+                    Log::warning("SMS configuration missing in Node notification service for {$to}.");
+                    return false;
+                }
             }
 
-            Log::error("2Factor SMS responded with error: {$response->body()} for recipient {$to}.");
+            Log::error("Node notification service SMS responded with error: " . $response->body() . " for recipient {$to}.");
             return false;
         } catch (\Exception $e) {
-            Log::error("Failed to send SMS to {$to} via 2Factor: " . $e->getMessage());
+            Log::error("Failed to connect to Node notification service for SMS to {$to}: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Send Transactional DLT approved Template SMS via 2Factor.
+     * Send Transactional DLT approved Template SMS via Node.js Notification Microservice.
      */
     public function sendTemplate(string $to, string $templateName, array $variables): bool
     {
@@ -81,45 +73,40 @@ class SmsProvider
             return false;
         }
 
-        $cleanPhone = preg_replace('/[^0-9]/', '', $to);
-        if (strlen($cleanPhone) > 10 && str_starts_with($cleanPhone, '91')) {
-            $cleanPhone = substr($cleanPhone, 2);
+        if (empty($this->nodeServiceUrl)) {
+            Log::warning("SmsProvider: NOTIFICATION_SERVICE_URL is missing in .env.");
+            return false;
         }
 
-        if (empty($this->apiKey)) {
-            Log::warning("SmsProvider: TWO_FACTOR_API_KEY is missing in .env. Cannot send template SMS.");
-            if (app()->environment('testing')) {
-                Log::info("SMS Template '{$templateName}' Mock Sent (Testing environment): {$to} (cleaned: {$cleanPhone}). Variables: " . json_encode($variables));
-                return true;
-            }
-            return false;
+        if (app()->environment('testing')) {
+            Log::info("SMS Template '{$templateName}' Mock Sent (Testing environment): {$to}. Variables: " . json_encode($variables));
+            return true;
         }
 
         try {
-            $query = [
-                'module' => 'TRANS_SMS',
-                'apikey' => $this->apiKey,
-                'to' => $cleanPhone,
-                'from' => $this->senderId,
-                'templatename' => $templateName,
-            ];
-
-            foreach ($variables as $index => $value) {
-                $query['var' . ($index + 1)] = $value;
-            }
-
-            $url = 'https://2factor.in/API/R1/?' . http_build_query($query);
-            $response = Http::get($url);
+            $response = Http::withToken($this->serviceToken)
+                ->timeout(5)
+                ->post("{$this->nodeServiceUrl}/api/notifications/sms/template", [
+                    'to' => $to,
+                    'templateName' => $templateName,
+                    'variables' => $variables,
+                ]);
 
             if ($response->successful()) {
-                Log::info("SMS Template '{$templateName}' successfully sent to {$to} via 2Factor.");
-                return true;
+                $data = $response->json();
+                if (!empty($data['success'])) {
+                    Log::info("SMS Template '{$templateName}' successfully sent to {$to} via Node Notification Service. MessageID: " . ($data['messageId'] ?? 'sent'));
+                    return true;
+                } elseif (($data['status'] ?? '') === 'configuration_missing') {
+                    Log::warning("SMS configuration missing in Node notification service for {$to}.");
+                    return false;
+                }
             }
 
-            Log::error("2Factor responded with error: {$response->body()} for recipient {$to}.");
+            Log::error("Node notification service SMS template responded with error: " . $response->body() . " for recipient {$to}.");
             return false;
         } catch (\Exception $e) {
-            Log::error("Failed to send 2Factor SMS template to {$to}: " . $e->getMessage());
+            Log::error("Failed to connect to Node notification service for template SMS to {$to}: " . $e->getMessage());
             return false;
         }
     }
